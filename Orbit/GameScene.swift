@@ -4,6 +4,7 @@ import UIKit
 final class GameScene: SKScene {
 
     private enum State { case menu, orbiting, flying, dead }
+    private enum Mode { case classic, daily }
 
     // Tuning
     private let launchSpeed: CGFloat = 640
@@ -12,6 +13,8 @@ final class GameScene: SKScene {
     private let missMargin: CGFloat = 240
 
     private var state: State = .menu
+    private var mode: Mode = .classic
+    private var rng = SeededRandom(seed: 0)
 
     private var planets: [Planet] = []
     private var currentIndex = 0
@@ -49,6 +52,12 @@ final class GameScene: SKScene {
     private let finalScoreLabel = SKLabelNode(fontNamed: "HelveticaNeue-UltraLight")
     private let finalBestLabel = SKLabelNode(fontNamed: "HelveticaNeue-Medium")
     private let overTapLabel = SKLabelNode(fontNamed: "HelveticaNeue-Medium")
+    private let dailyTag = SKLabelNode(fontNamed: "HelveticaNeue-Medium")
+    private var dailyButton: SKShapeNode!
+    private let dailyTitleLabel = SKLabelNode(fontNamed: "HelveticaNeue-Medium")
+    private let dailySubLabel = SKLabelNode(fontNamed: "HelveticaNeue-Medium")
+    private let overStreakLabel = SKLabelNode(fontNamed: "HelveticaNeue-Medium")
+    private let menuButtonLabel = SKLabelNode(fontNamed: "HelveticaNeue-Medium")
 
     // MARK: - Setup
 
@@ -105,6 +114,12 @@ final class GameScene: SKScene {
         scoreLabel.text = "0"
         cam.addChild(scoreLabel)
 
+        dailyTag.fontSize = 14
+        dailyTag.fontColor = Palette.gold
+        dailyTag.verticalAlignmentMode = .top
+        dailyTag.isHidden = true
+        cam.addChild(dailyTag)
+
         menuLayer.zPosition = 100
         cam.addChild(menuLayer)
 
@@ -122,6 +137,25 @@ final class GameScene: SKScene {
         menuTapLabel.fontColor = Palette.textDim
         menuTapLabel.run(pulseForever())
         menuLayer.addChild(menuTapLabel)
+
+        dailyButton = SKShapeNode(rectOf: CGSize(width: 268, height: 58), cornerRadius: 14)
+        dailyButton.fillColor = SKColor(white: 1, alpha: 0.05)
+        dailyButton.strokeColor = Palette.gold.withAlphaComponent(0.65)
+        dailyButton.lineWidth = 1.5
+        menuLayer.addChild(dailyButton)
+
+        dailyTitleLabel.text = "DAILY CHALLENGE"
+        dailyTitleLabel.fontSize = 16
+        dailyTitleLabel.fontColor = Palette.gold
+        dailyTitleLabel.verticalAlignmentMode = .center
+        dailyTitleLabel.position = CGPoint(x: 0, y: 10)
+        dailyButton.addChild(dailyTitleLabel)
+
+        dailySubLabel.fontSize = 11
+        dailySubLabel.fontColor = Palette.textDim
+        dailySubLabel.verticalAlignmentMode = .center
+        dailySubLabel.position = CGPoint(x: 0, y: -12)
+        dailyButton.addChild(dailySubLabel)
 
         gameOverLayer.zPosition = 100
         gameOverLayer.isHidden = true
@@ -143,11 +177,20 @@ final class GameScene: SKScene {
         finalBestLabel.fontColor = Palette.textDim
         gameOverLayer.addChild(finalBestLabel)
 
+        overStreakLabel.fontSize = 15
+        overStreakLabel.fontColor = Palette.gold
+        gameOverLayer.addChild(overStreakLabel)
+
         overTapLabel.text = "TAP TO RETRY"
         overTapLabel.fontSize = 17
         overTapLabel.fontColor = Palette.textDim
         overTapLabel.run(pulseForever())
         gameOverLayer.addChild(overTapLabel)
+
+        menuButtonLabel.text = "MENU"
+        menuButtonLabel.fontSize = 15
+        menuButtonLabel.fontColor = Palette.textDim
+        gameOverLayer.addChild(menuButtonLabel)
 
         layoutHUD()
     }
@@ -160,16 +203,20 @@ final class GameScene: SKScene {
     private func layoutHUD() {
         let h = size.height
         scoreLabel.position = CGPoint(x: 0, y: h / 2 - 64)
+        dailyTag.position = CGPoint(x: 0, y: h / 2 - 138)
 
         titleLabel.position = CGPoint(x: 0, y: h * 0.24)
         menuBestLabel.position = CGPoint(x: 0, y: h * 0.24 - 44)
-        menuTapLabel.position = CGPoint(x: 0, y: -h * 0.30)
+        menuTapLabel.position = CGPoint(x: 0, y: -h * 0.24)
+        dailyButton.position = CGPoint(x: 0, y: -h * 0.35)
 
         dimNode.size = CGSize(width: size.width, height: h)
         overCaptionLabel.position = CGPoint(x: 0, y: 96)
         finalScoreLabel.position = CGPoint(x: 0, y: 20)
         finalBestLabel.position = CGPoint(x: 0, y: -56)
-        overTapLabel.position = CGPoint(x: 0, y: -h * 0.30)
+        overStreakLabel.position = CGPoint(x: 0, y: -90)
+        overTapLabel.position = CGPoint(x: 0, y: -h * 0.26)
+        menuButtonLabel.position = CGPoint(x: 0, y: -h * 0.37)
     }
 
     override func didChangeSize(_ oldSize: CGSize) {
@@ -181,6 +228,9 @@ final class GameScene: SKScene {
     // MARK: - Run lifecycle
 
     private func startRun(showMenu: Bool) {
+        if showMenu { mode = .classic }
+        rng = SeededRandom(seed: mode == .daily ? Daily.seed : UInt64.random(in: .min ... .max))
+
         for planet in planets { planet.removeFromParent() }
         planets.removeAll()
         planetCount = 0
@@ -206,14 +256,32 @@ final class GameScene: SKScene {
         menuLayer.isHidden = !showMenu
         gameOverLayer.isHidden = true
         scoreLabel.isHidden = showMenu
-        menuBestLabel.text = "BEST \(best)"
-        menuBestLabel.isHidden = best == 0
+
+        if mode == .daily {
+            let streak = Daily.registerPlay()
+            dailyTag.text = "DAILY · 🔥 \(streak)"
+        }
+        dailyTag.isHidden = showMenu || mode == .classic
+
+        if showMenu {
+            menuBestLabel.text = "BEST \(best)"
+            menuBestLabel.isHidden = best == 0
+            let streak = Daily.currentStreak
+            if streak > 0 {
+                let bestToday = Daily.bestToday
+                dailySubLabel.text = bestToday > 0
+                    ? "🔥 \(streak) DAY STREAK · BEST TODAY \(bestToday)"
+                    : "🔥 \(streak) DAY STREAK"
+            } else {
+                dailySubLabel.text = "SAME RUN FOR EVERYONE · START A STREAK"
+            }
+        }
     }
 
     private func makePlanet(ringRadius: CGFloat, at position: CGPoint) -> Planet {
         let speed = min(baseOrbitSpeed + CGFloat(planetCount) * 0.045, maxOrbitSpeed)
         let planet = Planet(ringRadius: ringRadius,
-                            coreRadius: CGFloat.random(in: 10...16),
+                            coreRadius: rng.cgFloat(in: 10...16),
                             orbitSpeed: speed,
                             color: Palette.planetColor(index: planetCount))
         planet.position = position
@@ -224,10 +292,10 @@ final class GameScene: SKScene {
 
     private func spawnNext() {
         guard let last = planets.last else { return }
-        let distance = CGFloat.random(in: 270...420)
+        let distance = rng.cgFloat(in: 270...420)
         let spread: CGFloat = .pi * 0.36
-        let angle = CGFloat.pi / 2 + CGFloat.random(in: -spread...spread)
-        let planet = makePlanet(ringRadius: CGFloat.random(in: 62...105),
+        let angle = CGFloat.pi / 2 + rng.cgFloat(in: -spread...spread)
+        let planet = makePlanet(ringRadius: rng.cgFloat(in: 62...105),
                                 at: last.position + .polar(angle: angle, radius: distance))
         addChild(planet)
         planets.append(planet)
@@ -371,9 +439,14 @@ final class GameScene: SKScene {
         addChild(burst)
         burst.run(.sequence([.wait(forDuration: 1.5), .removeFromParent()]))
 
-        if score > best {
-            best = score
-            UserDefaults.standard.set(best, forKey: "bestScore")
+        switch mode {
+        case .classic:
+            if score > best {
+                best = score
+                UserDefaults.standard.set(best, forKey: "bestScore")
+            }
+        case .daily:
+            Daily.recordScore(score)
         }
 
         gameOverReady = false
@@ -383,8 +456,19 @@ final class GameScene: SKScene {
 
     private func showGameOver() {
         finalScoreLabel.text = "\(score)"
-        finalBestLabel.text = "BEST \(best)"
+        switch mode {
+        case .classic:
+            overCaptionLabel.text = "SCORE"
+            finalBestLabel.text = "BEST \(best)"
+            overStreakLabel.isHidden = true
+        case .daily:
+            overCaptionLabel.text = "DAILY CHALLENGE"
+            finalBestLabel.text = "BEST TODAY \(Daily.bestToday)"
+            overStreakLabel.text = "🔥 \(Daily.currentStreak) DAY STREAK"
+            overStreakLabel.isHidden = false
+        }
         scoreLabel.isHidden = true
+        dailyTag.isHidden = true
         gameOverLayer.alpha = 0
         gameOverLayer.isHidden = false
         gameOverLayer.run(.fadeIn(withDuration: 0.25))
@@ -394,11 +478,18 @@ final class GameScene: SKScene {
     // MARK: - Input
 
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        guard let touch = touches.first else { return }
         switch state {
         case .menu:
-            menuLayer.isHidden = true
-            scoreLabel.isHidden = false
-            state = .orbiting
+            let location = touch.location(in: menuLayer)
+            if dailyButton.calculateAccumulatedFrame().insetBy(dx: -18, dy: -14).contains(location) {
+                mode = .daily
+                startRun(showMenu: false)
+            } else {
+                menuLayer.isHidden = true
+                scoreLabel.isHidden = false
+                state = .orbiting
+            }
             Haptics.tap()
         case .orbiting:
             launch()
@@ -406,7 +497,12 @@ final class GameScene: SKScene {
             break
         case .dead:
             guard gameOverReady else { return }
-            startRun(showMenu: false)
+            let location = touch.location(in: gameOverLayer)
+            if menuButtonLabel.frame.insetBy(dx: -28, dy: -20).contains(location) {
+                startRun(showMenu: true)
+            } else {
+                startRun(showMenu: false)
+            }
         }
     }
 }
