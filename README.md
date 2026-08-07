@@ -22,7 +22,7 @@ Weekly, monthly, and all-time high scores in Firestore. No email or password —
 Until Firebase is configured the game runs fully offline and the leaderboard shows an offline notice. To go live:
 
 1. [Firebase Console](https://console.firebase.google.com) → Add project (no Analytics needed)
-2. Add an **iOS app** with bundle ID `com.almindurmis.orbit`, download `GoogleService-Info.plist` into `Orbit/`
+2. Add an **iOS app** with bundle ID `online.foundry7.orbit`, download `GoogleService-Info.plist` into `Orbit/`
 3. Create a **Firestore database** (production mode), then paste `firebase/firestore.rules` into Firestore → Rules
 4. `xcodegen generate` and rebuild
 

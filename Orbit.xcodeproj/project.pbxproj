@@ -28,11 +28,13 @@
 		AEB3A6AF71A0B352A96F6330 /* SeededRandom.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DDF215E856597FB6E5DBD8C /* SeededRandom.swift */; };
 		CB919734D7C43B4BDF57DF9B /* Geometry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94F23CC0DE7F87E66ED0B570 /* Geometry.swift */; };
 		CF8B79AE0EA02BA70923A9BF /* Textures.swift in Sources */ = {isa = PBXBuildFile; fileRef = C84E379A2BDA313B55B0CE5D /* Textures.swift */; };
+		F29DD4B6CDBAE928B5E5A0DD /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 090B092686913EE8BA69BE04 /* GoogleService-Info.plist */; };
 		FBBEA8376456FD2C70B8CE58 /* LeaderboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1FC3DEC54929DFEE926E68C /* LeaderboardView.swift */; };
 		FE1F71420B0761A4E62AA824 /* OrbitApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26EB023126B42D85C78E726C /* OrbitApp.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		090B092686913EE8BA69BE04 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		0C7EF320A59D6432F21EAC09 /* Daily.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Daily.swift; sourceTree = "<group>"; };
 		20936134E6681D18358932B7 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		24F25630AF1FA533A535F9B3 /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
@@ -78,6 +80,7 @@
 				0C7EF320A59D6432F21EAC09 /* Daily.swift */,
 				67704BCFB520BB5DBF3F2B55 /* GameScene.swift */,
 				94F23CC0DE7F87E66ED0B570 /* Geometry.swift */,
+				090B092686913EE8BA69BE04 /* GoogleService-Info.plist */,
 				992C49158BEDDD0A7F2B2BAC /* Haptics.swift */,
 				E691E1A576C579A627A7BDDF /* Info.plist */,
 				26EB023126B42D85C78E726C /* OrbitApp.swift */,
@@ -199,6 +202,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				33335E4F882F977DFA66C647 /* Assets.xcassets in Resources */,
+				F29DD4B6CDBAE928B5E5A0DD /* GoogleService-Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -249,7 +253,7 @@
 				);
 				MARKETING_VERSION = 1.0;
 				OTHER_LDFLAGS = "-ObjC";
-				PRODUCT_BUNDLE_IDENTIFIER = com.almindurmis.orbit;
+				PRODUCT_BUNDLE_IDENTIFIER = online.foundry7.orbit;
 				SDKROOT = iphoneos;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
@@ -326,7 +330,7 @@
 				);
 				MARKETING_VERSION = 1.0;
 				OTHER_LDFLAGS = "-ObjC";
-				PRODUCT_BUNDLE_IDENTIFIER = com.almindurmis.orbit;
+				PRODUCT_BUNDLE_IDENTIFIER = online.foundry7.orbit;
 				SDKROOT = iphoneos;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;

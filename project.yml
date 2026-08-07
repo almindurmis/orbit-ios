@@ -1,6 +1,6 @@
 name: Orbit
 options:
-  bundleIdPrefix: com.almindurmis
+  bundleIdPrefix: online.foundry7
   deploymentTarget:
     iOS: "16.0"
 packages:
@@ -35,7 +35,7 @@ targets:
         GADApplicationIdentifier: ca-app-pub-3940256099942544~1458002511
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.almindurmis.orbit
+        PRODUCT_BUNDLE_IDENTIFIER: online.foundry7.orbit
         TARGETED_DEVICE_FAMILY: "1"
         SWIFT_VERSION: "5.0"
         MARKETING_VERSION: "1.0"
