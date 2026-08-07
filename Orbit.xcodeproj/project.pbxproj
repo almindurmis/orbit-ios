@@ -8,20 +8,24 @@
 
 /* Begin PBXBuildFile section */
 		17780B5C60FFE0F04772EBAE /* Planet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 657D4332596AD0D5A77DD287 /* Planet.swift */; };
+		2C4C96041E03CA9A9CE80505 /* Daily.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C7EF320A59D6432F21EAC09 /* Daily.swift */; };
 		33335E4F882F977DFA66C647 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 20936134E6681D18358932B7 /* Assets.xcassets */; };
 		4B6D7E3EB11F2E3927CAD4BE /* GameScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67704BCFB520BB5DBF3F2B55 /* GameScene.swift */; };
 		60CE2DB69005C8391C172D2D /* Haptics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 992C49158BEDDD0A7F2B2BAC /* Haptics.swift */; };
 		744054AF1D3673B5F920ADDE /* Palette.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA721E1DEA08394103F9EC01 /* Palette.swift */; };
+		AEB3A6AF71A0B352A96F6330 /* SeededRandom.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DDF215E856597FB6E5DBD8C /* SeededRandom.swift */; };
 		CB919734D7C43B4BDF57DF9B /* Geometry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94F23CC0DE7F87E66ED0B570 /* Geometry.swift */; };
 		CF8B79AE0EA02BA70923A9BF /* Textures.swift in Sources */ = {isa = PBXBuildFile; fileRef = C84E379A2BDA313B55B0CE5D /* Textures.swift */; };
 		FE1F71420B0761A4E62AA824 /* OrbitApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26EB023126B42D85C78E726C /* OrbitApp.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		0C7EF320A59D6432F21EAC09 /* Daily.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Daily.swift; sourceTree = "<group>"; };
 		20936134E6681D18358932B7 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		26EB023126B42D85C78E726C /* OrbitApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrbitApp.swift; sourceTree = "<group>"; };
 		657D4332596AD0D5A77DD287 /* Planet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Planet.swift; sourceTree = "<group>"; };
 		67704BCFB520BB5DBF3F2B55 /* GameScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameScene.swift; sourceTree = "<group>"; };
+		8DDF215E856597FB6E5DBD8C /* SeededRandom.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SeededRandom.swift; sourceTree = "<group>"; };
 		93E43D9E19F5EF7D480B0771 /* Orbit.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Orbit.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		94F23CC0DE7F87E66ED0B570 /* Geometry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Geometry.swift; sourceTree = "<group>"; };
 		992C49158BEDDD0A7F2B2BAC /* Haptics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Haptics.swift; sourceTree = "<group>"; };
@@ -34,12 +38,14 @@
 			isa = PBXGroup;
 			children = (
 				20936134E6681D18358932B7 /* Assets.xcassets */,
+				0C7EF320A59D6432F21EAC09 /* Daily.swift */,
 				67704BCFB520BB5DBF3F2B55 /* GameScene.swift */,
 				94F23CC0DE7F87E66ED0B570 /* Geometry.swift */,
 				992C49158BEDDD0A7F2B2BAC /* Haptics.swift */,
 				26EB023126B42D85C78E726C /* OrbitApp.swift */,
 				AA721E1DEA08394103F9EC01 /* Palette.swift */,
 				657D4332596AD0D5A77DD287 /* Planet.swift */,
+				8DDF215E856597FB6E5DBD8C /* SeededRandom.swift */,
 				C84E379A2BDA313B55B0CE5D /* Textures.swift */,
 			);
 			path = Orbit;
@@ -131,12 +137,14 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2C4C96041E03CA9A9CE80505 /* Daily.swift in Sources */,
 				4B6D7E3EB11F2E3927CAD4BE /* GameScene.swift in Sources */,
 				CB919734D7C43B4BDF57DF9B /* Geometry.swift in Sources */,
 				60CE2DB69005C8391C172D2D /* Haptics.swift in Sources */,
 				FE1F71420B0761A4E62AA824 /* OrbitApp.swift in Sources */,
 				744054AF1D3673B5F920ADDE /* Palette.swift in Sources */,
 				17780B5C60FFE0F04772EBAE /* Planet.swift in Sources */,
+				AEB3A6AF71A0B352A96F6330 /* SeededRandom.swift in Sources */,
 				CF8B79AE0EA02BA70923A9BF /* Textures.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
