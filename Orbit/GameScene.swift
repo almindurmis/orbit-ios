@@ -12,7 +12,11 @@ final class GameScene: SKScene {
     private let maxOrbitSpeed: CGFloat = 3.1
     private let missMargin: CGFloat = 240
 
-    private var state: State = .menu
+    weak var bridge: GameBridge?
+
+    private var state: State = .menu {
+        didSet { bridge?.inMenu = state == .menu }
+    }
     private var mode: Mode = .classic
     private var rng = SeededRandom(seed: 0)
 
@@ -448,6 +452,7 @@ final class GameScene: SKScene {
         case .daily:
             Daily.recordScore(score)
         }
+        Backend.submitScore(score)
 
         gameOverReady = false
         run(.sequence([.wait(forDuration: 0.55),
@@ -473,6 +478,7 @@ final class GameScene: SKScene {
         gameOverLayer.isHidden = false
         gameOverLayer.run(.fadeIn(withDuration: 0.25))
         gameOverReady = true
+        AdsManager.shared.gameEnded(score: score)
     }
 
     // MARK: - Input

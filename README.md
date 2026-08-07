@@ -15,6 +15,21 @@ Fully offline, zero dependencies, all visuals generated in code (SwiftUI + Sprit
 
 One seeded run per calendar day — the planet layout is identical for everyone (deterministic splitmix64 RNG seeded from the date). Retry as often as you like; your best score today is tracked. Playing on consecutive days builds a 🔥 streak, Wordle-style; skip a day and it resets. All local, no account, no network.
 
+## Online leaderboard (Firebase)
+
+Weekly, monthly, and all-time high scores in Firestore. No email or password — players pick a name (max 50 chars) at first launch, get a random avatar (20 to choose from, changeable in Profile), and their account is keyed to the device ID: one account per device. Best score per period is kept automatically.
+
+Until Firebase is configured the game runs fully offline and the leaderboard shows an offline notice. To go live:
+
+1. [Firebase Console](https://console.firebase.google.com) → Add project (no Analytics needed)
+2. Add an **iOS app** with bundle ID `com.almindurmis.orbit`, download `GoogleService-Info.plist` into `Orbit/`
+3. Create a **Firestore database** (production mode), then paste `firebase/firestore.rules` into Firestore → Rules
+4. `xcodegen generate` and rebuild
+
+## Ads (AdMob)
+
+An interstitial shows at game over each time the player's cumulative score (across any number of games, saved locally) passes another 30 points. The build ships with Google's public **test** ad IDs — before release, replace `GADApplicationIdentifier` in `project.yml` and the ad unit ID in `Orbit/Services/AdsManager.swift` with your real AdMob IDs.
+
 ## Build & run
 
 ```sh
