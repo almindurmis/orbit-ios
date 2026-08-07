@@ -44,7 +44,7 @@ final class GameScene: SKScene {
     private let scoreLabel = SKLabelNode(fontNamed: "HelveticaNeue-UltraLight")
     private let menuLayer = SKNode()
     private let gameOverLayer = SKNode()
-    private let titleLabel = SKLabelNode(fontNamed: "HelveticaNeue-UltraLight")
+    private let titleLabel = SKLabelNode(fontNamed: "HelveticaNeue-Bold")
     private let menuBestLabel = SKLabelNode(fontNamed: "HelveticaNeue-Medium")
     private let menuTapLabel = SKLabelNode(fontNamed: "HelveticaNeue-Medium")
     private let dimNode = SKSpriteNode(color: SKColor(white: 0, alpha: 0.5), size: .zero)
