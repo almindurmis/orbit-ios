@@ -60,7 +60,7 @@ struct RootView: View {
                 ProfileView(profile: profile) { updated in
                     self.profile = updated
                     ProfileStore.save(updated)
-                    Backend.upsertUser(updated)
+                    Backend.updateProfile(updated)
                 }
             }
         }

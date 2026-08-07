@@ -55,6 +55,22 @@ enum Backend {
         ], merge: true)
     }
 
+    // Profile edits propagate to existing board entries immediately, so a new
+    // name/avatar shows on the leaderboard without waiting for the next score.
+    static func updateProfile(_ profile: Profile) {
+        guard isConfigured else { return }
+        upsertUser(profile)
+        let db = Firestore.firestore()
+        for period in LeaderboardPeriod.allCases {
+            let ref = db.collection("boards").document(period.key)
+                .collection("entries").document(DeviceID.id)
+            ref.getDocument { snapshot, _ in
+                guard snapshot?.exists == true else { return }
+                ref.updateData(["name": profile.name, "avatar": profile.avatar])
+            }
+        }
+    }
+
     // Keeps the best score per period; name/avatar refresh with every submit.
     static func submitScore(_ score: Int) {
         guard isConfigured, score > 0, let profile = ProfileStore.load() else { return }
