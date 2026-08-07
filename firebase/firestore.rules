@@ -1,0 +1,24 @@
+rules_version = '2';
+
+// Deploy in Firebase Console → Firestore → Rules.
+// Open writes keyed by device ID — fine for a casual leaderboard; add Firebase
+// App Check (and per-field validation) if abuse ever shows up.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{deviceId} {
+      allow read: if true;
+      allow write: if request.resource.data.name is string
+                   && request.resource.data.name.size() <= 50
+                   && request.resource.data.avatar is int
+                   && request.resource.data.avatar >= 0
+                   && request.resource.data.avatar < 20;
+    }
+    match /boards/{board}/entries/{deviceId} {
+      allow read: if true;
+      allow write: if request.resource.data.name is string
+                   && request.resource.data.name.size() <= 50
+                   && request.resource.data.score is int
+                   && request.resource.data.score >= 0;
+    }
+  }
+}
