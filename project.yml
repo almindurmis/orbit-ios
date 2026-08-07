@@ -1,0 +1,26 @@
+name: Orbit
+options:
+  bundleIdPrefix: com.almindurmis
+  deploymentTarget:
+    iOS: "16.0"
+targets:
+  Orbit:
+    type: application
+    platform: iOS
+    sources:
+      - Orbit
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.almindurmis.orbit
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: Orbit
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
+        INFOPLIST_KEY_UIStatusBarHidden: YES
+        INFOPLIST_KEY_UIViewControllerBasedStatusBarAppearance: NO
+        TARGETED_DEVICE_FAMILY: "1"
+        SWIFT_VERSION: "5.0"
+        MARKETING_VERSION: "1.0"
+        CURRENT_PROJECT_VERSION: 1
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        CODE_SIGN_STYLE: Automatic
