@@ -11,9 +11,19 @@ packages:
     url: https://github.com/googleads/swift-package-manager-google-mobile-ads
     majorVersion: 11.0.0
 targets:
+  OrbitUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - OrbitUITests
+    dependencies:
+      - target: Orbit
   Orbit:
     type: application
     platform: iOS
+    scheme:
+      testTargets:
+        - OrbitUITests
     sources:
       - Orbit
     dependencies:

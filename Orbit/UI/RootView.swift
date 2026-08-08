@@ -27,9 +27,9 @@ struct RootView: View {
             if bridge.inMenu {
                 VStack {
                     HStack {
-                        chromeButton("person.crop.circle") { showProfile = true }
+                        chromeButton("person.crop.circle", id: "profileButton") { showProfile = true }
                         Spacer()
-                        chromeButton("trophy") { showLeaderboard = true }
+                        chromeButton("trophy", id: "leaderboardButton") { showLeaderboard = true }
                     }
                     .padding(.horizontal, 22)
                     .padding(.top, 8)
@@ -74,12 +74,15 @@ struct RootView: View {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
                 withAnimation(.easeOut(duration: 0.4)) { showSplash = false }
                 // After the splash so the ATT prompt lands on a settled screen.
-                AdsManager.shared.start()
+                // Skipped during screenshot automation runs.
+                if !ProcessInfo.processInfo.arguments.contains("-screenshots") {
+                    AdsManager.shared.start()
+                }
             }
         }
     }
 
-    private func chromeButton(_ symbol: String, action: @escaping () -> Void) -> some View {
+    private func chromeButton(_ symbol: String, id: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: symbol)
                 .font(.system(size: 22, weight: .medium))
@@ -87,5 +90,6 @@ struct RootView: View {
                 .frame(width: 46, height: 46)
                 .background(Theme.card, in: Circle())
         }
+        .accessibilityIdentifier(id)
     }
 }

@@ -19,6 +19,7 @@
 		4B6D7E3EB11F2E3927CAD4BE /* GameScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67704BCFB520BB5DBF3F2B55 /* GameScene.swift */; };
 		58F7DB0E116BB7F27DFDEEF1 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A8AAE249E589964A5CA2A07 /* OnboardingView.swift */; };
 		60CE2DB69005C8391C172D2D /* Haptics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 992C49158BEDDD0A7F2B2BAC /* Haptics.swift */; };
+		66B4EE4006E229631D5CD1D1 /* ScreenshotTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD186C90DA1E96032C34DDB2 /* ScreenshotTests.swift */; };
 		744054AF1D3673B5F920ADDE /* Palette.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA721E1DEA08394103F9EC01 /* Palette.swift */; };
 		7A7AF491520245E930D26EC8 /* AdsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3B36B68AB07134D4AE32D17 /* AdsManager.swift */; };
 		7F97DCFC97CD097DFF1EE7EE /* Avatars.swift in Sources */ = {isa = PBXBuildFile; fileRef = 546E01125E1C36E7FE11D171 /* Avatars.swift */; };
@@ -33,6 +34,16 @@
 		FBBEA8376456FD2C70B8CE58 /* LeaderboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1FC3DEC54929DFEE926E68C /* LeaderboardView.swift */; };
 		FE1F71420B0761A4E62AA824 /* OrbitApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26EB023126B42D85C78E726C /* OrbitApp.swift */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		506E17A96F853FA73105BB02 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 0A57824173AF238C16E5DFDB /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = B87EF018B641D85E34ED2D32;
+			remoteInfo = Orbit;
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		090B092686913EE8BA69BE04 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
@@ -54,8 +65,10 @@
 		94F23CC0DE7F87E66ED0B570 /* Geometry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Geometry.swift; sourceTree = "<group>"; };
 		992C49158BEDDD0A7F2B2BAC /* Haptics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Haptics.swift; sourceTree = "<group>"; };
 		AA721E1DEA08394103F9EC01 /* Palette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Palette.swift; sourceTree = "<group>"; };
+		B74C6BC763E00FD91024D63A /* OrbitUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = OrbitUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		C1FC3DEC54929DFEE926E68C /* LeaderboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LeaderboardView.swift; sourceTree = "<group>"; };
 		C84E379A2BDA313B55B0CE5D /* Textures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Textures.swift; sourceTree = "<group>"; };
+		CD186C90DA1E96032C34DDB2 /* ScreenshotTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenshotTests.swift; sourceTree = "<group>"; };
 		E691E1A576C579A627A7BDDF /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		E838416DC6D50437AB78C340 /* GalaxyBackground.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GalaxyBackground.swift; sourceTree = "<group>"; };
 		F3729685554D0260F957EFC8 /* SplashView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplashView.swift; sourceTree = "<group>"; };
@@ -115,6 +128,7 @@
 			isa = PBXGroup;
 			children = (
 				93E43D9E19F5EF7D480B0771 /* Orbit.app */,
+				B74C6BC763E00FD91024D63A /* OrbitUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -123,6 +137,7 @@
 			isa = PBXGroup;
 			children = (
 				00ECA7FF55D55998AD25B1CA /* Orbit */,
+				F6EA44E3906E7E57A07F6BC5 /* OrbitUITests */,
 				B307547D1ABD752BE02491B9 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -138,9 +153,35 @@
 			path = Services;
 			sourceTree = "<group>";
 		};
+		F6EA44E3906E7E57A07F6BC5 /* OrbitUITests */ = {
+			isa = PBXGroup;
+			children = (
+				CD186C90DA1E96032C34DDB2 /* ScreenshotTests.swift */,
+			);
+			path = OrbitUITests;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		60C563C8337C0BB1E97DDB59 /* OrbitUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 70326219EB34E5A4602DD84C /* Build configuration list for PBXNativeTarget "OrbitUITests" */;
+			buildPhases = (
+				8DD5A38E4BFE346562A7C4BC /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				9C481ADFABFF06D7A3D74BAC /* PBXTargetDependency */,
+			);
+			name = OrbitUITests;
+			packageProductDependencies = (
+			);
+			productName = OrbitUITests;
+			productReference = B74C6BC763E00FD91024D63A /* OrbitUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 		B87EF018B641D85E34ED2D32 /* Orbit */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 1ED43C45F010E6E18A4680AC /* Build configuration list for PBXNativeTarget "Orbit" */;
@@ -171,6 +212,9 @@
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
+					60C563C8337C0BB1E97DDB59 = {
+						TestTargetID = B87EF018B641D85E34ED2D32;
+					};
 					B87EF018B641D85E34ED2D32 = {
 						DevelopmentTeam = 8R2N7396XY;
 						ProvisioningStyle = Automatic;
@@ -195,6 +239,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
+				60C563C8337C0BB1E97DDB59 /* OrbitUITests */,
 				B87EF018B641D85E34ED2D32 /* Orbit */,
 			);
 		};
@@ -241,7 +286,23 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		8DD5A38E4BFE346562A7C4BC /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				66B4EE4006E229631D5CD1D1 /* ScreenshotTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		9C481ADFABFF06D7A3D74BAC /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = B87EF018B641D85E34ED2D32 /* Orbit */;
+			targetProxy = 506E17A96F853FA73105BB02 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		1C3F5A8A5772DFD0CD0785E5 /* Release */ = {
@@ -344,6 +405,22 @@
 			};
 			name = Debug;
 		};
+		CA1090AFD6418AF179169ECF /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = online.foundry7.OrbitUITests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = Orbit;
+			};
+			name = Release;
+		};
 		FBFF5D8A6298BD9025349208 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -407,6 +484,22 @@
 			};
 			name = Debug;
 		};
+		FE2C67ABC00F97626F71D836 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = online.foundry7.OrbitUITests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = Orbit;
+			};
+			name = Debug;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -424,6 +517,15 @@
 			buildConfigurations = (
 				FBFF5D8A6298BD9025349208 /* Debug */,
 				58C4C1DF9D487759A4FB7D08 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		70326219EB34E5A4602DD84C /* Build configuration list for PBXNativeTarget "OrbitUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FE2C67ABC00F97626F71D836 /* Debug */,
+				CA1090AFD6418AF179169ECF /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
