@@ -1,5 +1,28 @@
 import SwiftUI
 
+// Custom segmented control: readable unselected labels on the dark backdrop.
+struct PeriodPicker: View {
+    @Binding var selection: LeaderboardPeriod
+
+    var body: some View {
+        HStack(spacing: 6) {
+            ForEach(LeaderboardPeriod.allCases) { period in
+                Button {
+                    selection = period
+                } label: {
+                    Text(period.rawValue)
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(selection == period ? .black : .white.opacity(0.78))
+                        .padding(.vertical, 9)
+                        .frame(maxWidth: .infinity)
+                        .background(selection == period ? Theme.gold : Color.white.opacity(0.10),
+                                    in: Capsule())
+                }
+            }
+        }
+    }
+}
+
 struct LeaderboardView: View {
     @State private var period: LeaderboardPeriod = .weekly
     @State private var entries: [LeaderboardEntry] = []
@@ -8,17 +31,14 @@ struct LeaderboardView: View {
 
     var body: some View {
         ZStack {
-            Theme.background.ignoresSafeArea()
+            GalaxyBackground()
             VStack(spacing: 16) {
                 Text("LEADERBOARD")
                     .font(.system(size: 15, weight: .bold))
-                    .foregroundStyle(Theme.textDim)
+                    .foregroundStyle(.white.opacity(0.7))
                     .padding(.top, 24)
-                Picker("Period", selection: $period) {
-                    ForEach(LeaderboardPeriod.allCases) { Text($0.rawValue).tag($0) }
-                }
-                .pickerStyle(.segmented)
-                .padding(.horizontal, 24)
+                PeriodPicker(selection: $period)
+                    .padding(.horizontal, 24)
                 content
             }
         }
@@ -69,7 +89,7 @@ struct LeaderboardView: View {
         }
         .padding(.vertical, 10)
         .padding(.horizontal, 14)
-        .background(isMe ? Theme.gold.opacity(0.15) : Theme.card,
+        .background(isMe ? Theme.gold.opacity(0.18) : Color.white.opacity(0.09),
                     in: RoundedRectangle(cornerRadius: 14))
     }
 

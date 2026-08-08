@@ -23,11 +23,11 @@ struct ProfileView: View {
 
     var body: some View {
         ZStack {
-            Theme.background.ignoresSafeArea()
+            GalaxyBackground()
             VStack(spacing: 22) {
                 Text("PROFILE")
                     .font(.system(size: 15, weight: .bold))
-                    .foregroundStyle(Theme.textDim)
+                    .foregroundStyle(.white.opacity(0.7))
                     .padding(.top, 24)
                 AvatarView(index: avatar, size: 88)
                 TextField("", text: $name, prompt: Text("Your name").foregroundColor(Theme.textDim))
@@ -36,7 +36,7 @@ struct ProfileView: View {
                     .font(.system(size: 20, weight: .medium))
                     .foregroundStyle(.white)
                     .padding(.vertical, 12)
-                    .background(Theme.card, in: RoundedRectangle(cornerRadius: 14))
+                    .background(Color.white.opacity(0.10), in: RoundedRectangle(cornerRadius: 14))
                     .padding(.horizontal, 40)
                     .onChange(of: name) { value in
                         if value.count > 50 { name = String(value.prefix(50)) }
