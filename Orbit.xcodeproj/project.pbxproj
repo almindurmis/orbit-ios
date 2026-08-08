@@ -28,6 +28,7 @@
 		AEB3A6AF71A0B352A96F6330 /* SeededRandom.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DDF215E856597FB6E5DBD8C /* SeededRandom.swift */; };
 		CB919734D7C43B4BDF57DF9B /* Geometry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94F23CC0DE7F87E66ED0B570 /* Geometry.swift */; };
 		CF8B79AE0EA02BA70923A9BF /* Textures.swift in Sources */ = {isa = PBXBuildFile; fileRef = C84E379A2BDA313B55B0CE5D /* Textures.swift */; };
+		EE1FBD556760BA0D92BF15C1 /* GalaxyBackground.swift in Sources */ = {isa = PBXBuildFile; fileRef = E838416DC6D50437AB78C340 /* GalaxyBackground.swift */; };
 		F29DD4B6CDBAE928B5E5A0DD /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 090B092686913EE8BA69BE04 /* GoogleService-Info.plist */; };
 		FBBEA8376456FD2C70B8CE58 /* LeaderboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1FC3DEC54929DFEE926E68C /* LeaderboardView.swift */; };
 		FE1F71420B0761A4E62AA824 /* OrbitApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26EB023126B42D85C78E726C /* OrbitApp.swift */; };
@@ -56,6 +57,7 @@
 		C1FC3DEC54929DFEE926E68C /* LeaderboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LeaderboardView.swift; sourceTree = "<group>"; };
 		C84E379A2BDA313B55B0CE5D /* Textures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Textures.swift; sourceTree = "<group>"; };
 		E691E1A576C579A627A7BDDF /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		E838416DC6D50437AB78C340 /* GalaxyBackground.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GalaxyBackground.swift; sourceTree = "<group>"; };
 		F3729685554D0260F957EFC8 /* SplashView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplashView.swift; sourceTree = "<group>"; };
 		F3B36B68AB07134D4AE32D17 /* AdsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdsManager.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -98,6 +100,7 @@
 			isa = PBXGroup;
 			children = (
 				546E01125E1C36E7FE11D171 /* Avatars.swift */,
+				E838416DC6D50437AB78C340 /* GalaxyBackground.swift */,
 				C1FC3DEC54929DFEE926E68C /* LeaderboardView.swift */,
 				2A8AAE249E589964A5CA2A07 /* OnboardingView.swift */,
 				24F25630AF1FA533A535F9B3 /* ProfileView.swift */,
@@ -219,6 +222,7 @@
 				15C7C3B412DD2A31F269D6AE /* Backend.swift in Sources */,
 				2C4C96041E03CA9A9CE80505 /* Daily.swift in Sources */,
 				26EA2CB5E8DE241251BA92DA /* DeviceID.swift in Sources */,
+				EE1FBD556760BA0D92BF15C1 /* GalaxyBackground.swift in Sources */,
 				4B6D7E3EB11F2E3927CAD4BE /* GameScene.swift in Sources */,
 				CB919734D7C43B4BDF57DF9B /* Geometry.swift in Sources */,
 				60CE2DB69005C8391C172D2D /* Haptics.swift in Sources */,
