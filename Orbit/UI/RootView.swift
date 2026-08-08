@@ -67,7 +67,7 @@ struct RootView: View {
         .onAppear {
             scene.bridge = bridge
             AdsManager.shared.start()
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
                 withAnimation(.easeOut(duration: 0.4)) { showSplash = false }
             }
         }
