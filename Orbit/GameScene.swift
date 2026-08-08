@@ -23,6 +23,18 @@ final class GameScene: SKScene {
     private var planets: [Planet] = []
     private var currentIndex = 0
     private var planetCount = 0
+    private var captured = 0
+    private var lastLevel = 1
+
+    // Infinite levels: one level per 5 captures, rings shrink toward a floor.
+    private var level: Int { captured / 5 + 1 }
+
+    private func ringRadiusRange(for level: Int) -> ClosedRange<CGFloat> {
+        let t = min(CGFloat(level - 1) / 9.0, 1.0)
+        let lower = 95 - (95 - 55) * t
+        let upper = 120 - (120 - 75) * t
+        return lower...upper
+    }
 
     private let player = SKNode()
     private var trail: SKEmitterNode!
@@ -57,6 +69,7 @@ final class GameScene: SKScene {
     private let finalBestLabel = SKLabelNode(fontNamed: "HelveticaNeue-Medium")
     private let overTapLabel = SKLabelNode(fontNamed: "HelveticaNeue-Medium")
     private let dailyTag = SKLabelNode(fontNamed: "HelveticaNeue-Medium")
+    private let levelLabel = SKLabelNode(fontNamed: "HelveticaNeue-Medium")
     private var dailyButton: SKShapeNode!
     private let dailyTitleLabel = SKLabelNode(fontNamed: "HelveticaNeue-Medium")
     private let dailySubLabel = SKLabelNode(fontNamed: "HelveticaNeue-Medium")
@@ -69,7 +82,60 @@ final class GameScene: SKScene {
         backgroundColor = Palette.background
         setupPlayer()
         buildHUD()
+        setupSpaceDust()
+        startAsteroidSpawner()
         startRun(showMenu: true)
+    }
+
+    private func setupSpaceDust() {
+        let dust = SKEmitterNode()
+        dust.particleTexture = Textures.softDot
+        dust.particleBirthRate = 8
+        dust.particleLifetime = 12
+        dust.particleLifetimeRange = 5
+        dust.particleAlpha = 0.12
+        dust.particleAlphaRange = 0.08
+        dust.particleAlphaSpeed = -0.008
+        dust.particleScale = 0.04
+        dust.particleScaleRange = 0.03
+        dust.particleSpeed = 12
+        dust.particleSpeedRange = 8
+        dust.emissionAngle = .pi * 1.25
+        dust.emissionAngleRange = .pi / 3
+        dust.particlePositionRange = CGVector(dx: size.width * 1.5, dy: size.height * 1.5)
+        dust.particleBlendMode = .add
+        dust.targetNode = self
+        dust.zPosition = -15
+        cam.addChild(dust)
+    }
+
+    private func startAsteroidSpawner() {
+        let loop = SKAction.repeatForever(.sequence([
+            .wait(forDuration: 10, withRange: 9),
+            .run { [weak self] in self?.spawnAsteroid() },
+        ]))
+        run(loop, withKey: "asteroids")
+    }
+
+    private func spawnAsteroid() {
+        guard let texture = Textures.asteroids.randomElement() else { return }
+        let asteroid = SKSpriteNode(texture: texture)
+        asteroid.setScale(CGFloat.random(in: 0.35...0.9))
+        asteroid.alpha = 0.85
+        asteroid.zPosition = -8
+        let fromLeft = Bool.random()
+        let x = cam.position.x + (fromLeft ? -size.width / 2 - 80 : size.width / 2 + 80)
+        let y = cam.position.y + CGFloat.random(in: -size.height / 2 ... size.height / 2)
+        asteroid.position = CGPoint(x: x, y: y)
+        addChild(asteroid)
+        let duration = TimeInterval.random(in: 7...12)
+        asteroid.run(.group([
+            .moveBy(x: (fromLeft ? 1 : -1) * (size.width + 160),
+                    y: CGFloat.random(in: -140...140),
+                    duration: duration),
+            .rotate(byAngle: CGFloat.random(in: -3...3), duration: duration),
+        ]))
+        asteroid.run(.sequence([.wait(forDuration: duration), .removeFromParent()]))
     }
 
     private func setupPlayer() {
@@ -117,6 +183,11 @@ final class GameScene: SKScene {
         scoreLabel.verticalAlignmentMode = .top
         scoreLabel.text = "0"
         cam.addChild(scoreLabel)
+
+        levelLabel.fontSize = 14
+        levelLabel.fontColor = Palette.textDim
+        levelLabel.verticalAlignmentMode = .top
+        cam.addChild(levelLabel)
 
         dailyTag.fontSize = 14
         dailyTag.fontColor = Palette.gold
@@ -207,7 +278,8 @@ final class GameScene: SKScene {
     private func layoutHUD() {
         let h = size.height
         scoreLabel.position = CGPoint(x: 0, y: h / 2 - 64)
-        dailyTag.position = CGPoint(x: 0, y: h / 2 - 138)
+        levelLabel.position = CGPoint(x: 0, y: h / 2 - 136)
+        dailyTag.position = CGPoint(x: 0, y: h / 2 - 158)
 
         titleLabel.position = CGPoint(x: 0, y: h * 0.24)
         menuBestLabel.position = CGPoint(x: 0, y: h * 0.24 - 44)
@@ -239,9 +311,13 @@ final class GameScene: SKScene {
         planets.removeAll()
         planetCount = 0
         currentIndex = 0
+        captured = 0
+        lastLevel = 1
         score = 0
+        levelLabel.text = "LEVEL 1"
+        levelLabel.isHidden = showMenu
 
-        let first = makePlanet(ringRadius: 90, at: .zero)
+        let first = makePlanet(ringRadius: 105, at: .zero)
         addChild(first)
         planets.append(first)
         spawnNext()
@@ -299,7 +375,7 @@ final class GameScene: SKScene {
         let distance = rng.cgFloat(in: 270...420)
         let spread: CGFloat = .pi * 0.36
         let angle = CGFloat.pi / 2 + rng.cgFloat(in: -spread...spread)
-        let planet = makePlanet(ringRadius: rng.cgFloat(in: 62...105),
+        let planet = makePlanet(ringRadius: rng.cgFloat(in: ringRadiusRange(for: level)),
                                 at: last.position + .polar(angle: angle, radius: distance))
         addChild(planet)
         planets.append(planet)
@@ -389,6 +465,27 @@ final class GameScene: SKScene {
               color: perfect ? Palette.gold : Palette.textDim,
               above: target)
 
+        captured += 1
+        if level > lastLevel {
+            lastLevel = level
+            levelLabel.text = "LEVEL \(level)"
+            let announce = SKLabelNode(fontNamed: "HelveticaNeue-Bold")
+            announce.text = "LEVEL \(level)"
+            announce.fontSize = 30
+            announce.fontColor = Palette.gold
+            announce.position = CGPoint(x: 0, y: size.height * 0.16)
+            announce.zPosition = 90
+            announce.alpha = 0
+            announce.setScale(0.7)
+            cam.addChild(announce)
+            announce.run(.sequence([
+                .group([.fadeIn(withDuration: 0.2), .scale(to: 1, duration: 0.25)]),
+                .wait(forDuration: 0.9),
+                .fadeOut(withDuration: 0.4),
+                .removeFromParent(),
+            ]))
+        }
+
         target.pulse()
         if perfect { Haptics.perfect() } else { Haptics.capture() }
 
@@ -473,6 +570,7 @@ final class GameScene: SKScene {
             overStreakLabel.isHidden = false
         }
         scoreLabel.isHidden = true
+        levelLabel.isHidden = true
         dailyTag.isHidden = true
         gameOverLayer.alpha = 0
         gameOverLayer.isHidden = false
@@ -494,6 +592,7 @@ final class GameScene: SKScene {
             } else {
                 menuLayer.isHidden = true
                 scoreLabel.isHidden = false
+                levelLabel.isHidden = false
                 state = .orbiting
             }
             Haptics.tap()

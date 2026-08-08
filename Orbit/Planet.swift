@@ -49,22 +49,71 @@ final class Planet: SKNode {
         ring.run(.sequence([up, down]))
     }
 
-    // Stars live as children so they scroll and get culled with their planet.
-    func sprinkleStars(count: Int = 18) {
-        for _ in 0..<count {
-            let star = SKShapeNode(circleOfRadius: CGFloat.random(in: 0.7...1.9))
-            star.fillColor = SKColor.white
-            star.strokeColor = .clear
-            let r = CGFloat.random(in: (ringRadius + 40)...520)
+    // Backdrop lives as children so it scrolls and gets culled with its planet.
+    func sprinkleStars(count: Int = 26) {
+        let tints: [SKColor] = [
+            .white, .white,
+            SKColor(red: 0.72, green: 0.85, blue: 1.0, alpha: 1),
+            SKColor(red: 1.0, green: 0.9, blue: 0.78, alpha: 1),
+            SKColor(red: 0.85, green: 0.8, blue: 1.0, alpha: 1),
+        ]
+        for i in 0..<count {
+            let r = CGFloat.random(in: (ringRadius + 40)...560)
             let a = CGFloat.random(in: 0...(2 * .pi))
-            star.position = CGPoint(x: cos(a) * r, y: sin(a) * r)
-            let baseAlpha = CGFloat.random(in: 0.15...0.6)
+            let position = CGPoint(x: cos(a) * r, y: sin(a) * r)
+            let tint = tints.randomElement() ?? .white
+
+            // A few bright stars get a soft glow halo; the rest are pinpricks.
+            if i < 3 {
+                let glow = SKSpriteNode(texture: Textures.softDot)
+                glow.size = CGSize(width: CGFloat.random(in: 10...20), height: CGFloat.random(in: 10...20))
+                glow.color = tint
+                glow.colorBlendFactor = 1
+                glow.blendMode = .add
+                glow.alpha = CGFloat.random(in: 0.5...0.8)
+                glow.position = position
+                glow.zPosition = -20
+                glow.run(twinkle(base: glow.alpha, floor: 0.25))
+                addChild(glow)
+            }
+
+            let star = SKShapeNode(circleOfRadius: CGFloat.random(in: 0.6...2.1))
+            star.fillColor = tint
+            star.strokeColor = .clear
+            star.position = position
+            let baseAlpha = CGFloat.random(in: 0.15...0.65)
             star.alpha = baseAlpha
             star.zPosition = -20
-            let dim = SKAction.fadeAlpha(to: 0.06, duration: TimeInterval.random(in: 0.8...2.4))
-            let brighten = SKAction.fadeAlpha(to: baseAlpha, duration: TimeInterval.random(in: 0.8...2.4))
-            star.run(.repeatForever(.sequence([dim, brighten])))
+            star.run(twinkle(base: baseAlpha, floor: 0.06))
             addChild(star)
+        }
+        addNebulae()
+    }
+
+    private func twinkle(base: CGFloat, floor: CGFloat) -> SKAction {
+        .repeatForever(.sequence([
+            .fadeAlpha(to: floor, duration: TimeInterval.random(in: 0.8...2.4)),
+            .fadeAlpha(to: base, duration: TimeInterval.random(in: 0.8...2.4)),
+        ]))
+    }
+
+    // Large, very faint additive color washes — reads as distant nebulae.
+    private func addNebulae() {
+        for _ in 0..<(Int.random(in: 1...2)) {
+            let nebula = SKSpriteNode(texture: Textures.softDot)
+            let diameter = CGFloat.random(in: 480...850)
+            nebula.size = CGSize(width: diameter, height: diameter * CGFloat.random(in: 0.6...1.0))
+            nebula.color = SKColor(hue: CGFloat.random(in: 0...1), saturation: 0.8,
+                                   brightness: 0.7, alpha: 1)
+            nebula.colorBlendFactor = 1
+            nebula.blendMode = .add
+            nebula.alpha = CGFloat.random(in: 0.05...0.10)
+            nebula.zRotation = CGFloat.random(in: 0...(2 * .pi))
+            let r = CGFloat.random(in: 120...420)
+            let a = CGFloat.random(in: 0...(2 * .pi))
+            nebula.position = CGPoint(x: cos(a) * r, y: sin(a) * r)
+            nebula.zPosition = -26
+            addChild(nebula)
         }
     }
 }
