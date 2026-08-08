@@ -61,14 +61,20 @@ struct RootView: View {
                     self.profile = updated
                     ProfileStore.save(updated)
                     Backend.updateProfile(updated)
+                } onDelete: {
+                    Backend.deleteAccount()
+                    ProfileStore.clear()
+                    self.profile = nil
+                    pendingAvatar = Int.random(in: 0..<Avatars.count)
                 }
             }
         }
         .onAppear {
             scene.bridge = bridge
-            AdsManager.shared.start()
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
                 withAnimation(.easeOut(duration: 0.4)) { showSplash = false }
+                // After the splash so the ATT prompt lands on a settled screen.
+                AdsManager.shared.start()
             }
         }
     }

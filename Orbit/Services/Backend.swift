@@ -91,6 +91,18 @@ enum Backend {
         }
     }
 
+    // App Store 5.1.1: users who can create an account must be able to delete
+    // it in-app. Removes the user doc and current-period board entries.
+    static func deleteAccount() {
+        guard isConfigured else { return }
+        let db = Firestore.firestore()
+        db.collection("users").document(DeviceID.id).delete()
+        for period in LeaderboardPeriod.allCases {
+            db.collection("boards").document(period.key)
+                .collection("entries").document(DeviceID.id).delete()
+        }
+    }
+
     static func leaderboard(_ period: LeaderboardPeriod) async throws -> [LeaderboardEntry] {
         guard isConfigured else { return [] }
         let snapshot = try await Firestore.firestore()

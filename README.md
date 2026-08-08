@@ -29,7 +29,7 @@ Until Firebase is configured the game runs fully offline and the leaderboard sho
 
 ## Ads (AdMob)
 
-An interstitial shows at game over each time the player's cumulative score (across any number of games, saved locally) passes another 30 points. The build ships with Google's public **test** ad IDs — before release, replace `GADApplicationIdentifier` in `project.yml` and the ad unit ID in `Orbit/Services/AdsManager.swift` with your real AdMob IDs.
+An interstitial shows at game over each time the player's cumulative score (across any number of games, saved locally) passes another 30 points. Debug builds use Google's public test ad unit (clicking your own live ads violates AdMob policy); release builds use the real unit. The ATT tracking prompt is requested after the splash; declining it just means non-personalized ads. Privacy policy and terms live in `docs/` (serve via GitHub Pages).
 
 ## Build & run
 
