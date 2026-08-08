@@ -37,6 +37,7 @@ struct LeaderboardView: View {
                     .font(.system(size: 15, weight: .bold))
                     .foregroundStyle(.white.opacity(0.7))
                     .padding(.top, 24)
+                    .allowsHitTesting(false)
                 PeriodPicker(selection: $period)
                     .padding(.horizontal, 24)
                 content
@@ -102,6 +103,7 @@ struct LeaderboardView: View {
                 .multilineTextAlignment(.center)
             Spacer()
         }
+        .allowsHitTesting(false)
     }
 
     private func reload() async {

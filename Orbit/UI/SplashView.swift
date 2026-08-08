@@ -31,6 +31,7 @@ struct SplashView: View {
                     .foregroundStyle(.white)
             }
         }
+        .allowsHitTesting(false)
         .onAppear {
             withAnimation(.linear(duration: 1.1).repeatForever(autoreverses: false)) {
                 spinning = true

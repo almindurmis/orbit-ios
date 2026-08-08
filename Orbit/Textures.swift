@@ -50,6 +50,40 @@ enum Textures {
         return SKTexture(image: image)
     }
 
+    // Tiny rocket pointing up: light body, cyan nose and fins, dark window.
+    static let rocket: SKTexture = {
+        let size = CGSize(width: 22, height: 48)
+        let cyan = UIColor(red: 0.32, green: 0.9, blue: 1.0, alpha: 1)
+        let image = UIGraphicsImageRenderer(size: size).image { ctx in
+            let body = UIBezierPath(roundedRect: CGRect(x: 4, y: 8, width: 14, height: 32),
+                                    cornerRadius: 7)
+            UIColor(white: 0.88, alpha: 1).setFill()
+            body.fill()
+
+            let nose = UIBezierPath()
+            nose.move(to: CGPoint(x: 4, y: 12))
+            nose.addLine(to: CGPoint(x: 11, y: 0))
+            nose.addLine(to: CGPoint(x: 18, y: 12))
+            nose.close()
+            cyan.setFill()
+            nose.fill()
+
+            ctx.cgContext.setFillColor(UIColor(red: 0.1, green: 0.15, blue: 0.3, alpha: 1).cgColor)
+            ctx.cgContext.fillEllipse(in: CGRect(x: 7.5, y: 16, width: 7, height: 7))
+
+            for x: CGFloat in [0, 22] {
+                let fin = UIBezierPath()
+                fin.move(to: CGPoint(x: x == 0 ? 4 : 18, y: 30))
+                fin.addLine(to: CGPoint(x: x, y: 44))
+                fin.addLine(to: CGPoint(x: x == 0 ? 4 : 18, y: 40))
+                fin.close()
+                cyan.setFill()
+                fin.fill()
+            }
+        }
+        return SKTexture(image: image)
+    }()
+
     static func fadingLine(length: CGFloat, thickness: CGFloat) -> SKTexture {
         let size = CGSize(width: length, height: thickness)
         let image = UIGraphicsImageRenderer(size: size).image { ctx in
