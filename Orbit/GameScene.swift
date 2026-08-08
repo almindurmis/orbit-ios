@@ -26,11 +26,11 @@ final class GameScene: SKScene {
     private var captured = 0
     private var lastLevel = 1
 
-    // Infinite levels: one level per 5 captures, rings shrink toward a floor.
-    private var level: Int { captured / 5 + 1 }
+    // Infinite levels: one level per 20 captures, rings shrink toward a floor.
+    private var level: Int { captured / 20 + 1 }
 
     private func ringRadiusRange(for level: Int) -> ClosedRange<CGFloat> {
-        let t = min(CGFloat(level - 1) / 9.0, 1.0)
+        let t = min(CGFloat(level - 1) / 4.0, 1.0)
         let lower = 95 - (95 - 55) * t
         let upper = 120 - (120 - 75) * t
         return lower...upper
