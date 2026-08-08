@@ -3,14 +3,17 @@ import SwiftUI
 struct ProfileView: View {
     let profile: Profile
     let onSave: (Profile) -> Void
+    let onDelete: () -> Void
 
     @Environment(\.dismiss) private var dismiss
     @State private var name: String
     @State private var avatar: Int
+    @State private var confirmingDelete = false
 
-    init(profile: Profile, onSave: @escaping (Profile) -> Void) {
+    init(profile: Profile, onSave: @escaping (Profile) -> Void, onDelete: @escaping () -> Void) {
         self.profile = profile
         self.onSave = onSave
+        self.onDelete = onDelete
         _name = State(initialValue: profile.name)
         _avatar = State(initialValue: profile.avatar)
     }
@@ -68,7 +71,20 @@ struct ProfileView: View {
                 .disabled(trimmed.isEmpty)
                 .opacity(trimmed.isEmpty ? 0.4 : 1)
                 Spacer()
+                Button("DELETE ACCOUNT") { confirmingDelete = true }
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(Color.red.opacity(0.85))
+                    .padding(.bottom, 28)
             }
+        }
+        .alert("Delete account?", isPresented: $confirmingDelete) {
+            Button("Delete", role: .destructive) {
+                onDelete()
+                dismiss()
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Your name and leaderboard scores will be removed. This can't be undone.")
         }
     }
 }

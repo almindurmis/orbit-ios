@@ -17,4 +17,8 @@ enum ProfileStore {
         guard let data = try? JSONEncoder().encode(profile) else { return }
         UserDefaults.standard.set(data, forKey: key)
     }
+
+    static func clear() {
+        UserDefaults.standard.removeObject(forKey: key)
+    }
 }

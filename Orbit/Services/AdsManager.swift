@@ -1,22 +1,35 @@
 import GoogleMobileAds
+import AppTrackingTransparency
 import UIKit
 
 // One interstitial per 30 cumulative points scored, shown at game over.
 // The counter persists locally across games and app starts; it only resets
 // when an ad actually presents, so a not-yet-loaded ad is owed, not skipped.
-// Test IDs are Google's public ones — swap in real AdMob IDs before release
-// (ad unit below and GADApplicationIdentifier in project.yml).
 final class AdsManager: NSObject, GADFullScreenContentDelegate {
     static let shared = AdsManager()
+
+    // Debug builds keep Google's public test unit — clicking your own live
+    // ads violates AdMob policy. Release builds use the real unit.
+    #if DEBUG
     private static let interstitialID = "ca-app-pub-3940256099942544/4411468910"
+    #else
+    private static let interstitialID = "ca-app-pub-2662792990353664/8511942614"
+    #endif
+
     private static let threshold = 30
     private static let counterKey = "ads.scoreSinceLastAd"
 
     private var interstitial: GADInterstitialAd?
 
+    // ATT prompt first (App Store requirement for ad tracking); ads load
+    // either way — denied just means non-personalized.
     func start() {
-        GADMobileAds.sharedInstance().start(completionHandler: nil)
-        load()
+        ATTrackingManager.requestTrackingAuthorization { [weak self] _ in
+            DispatchQueue.main.async {
+                GADMobileAds.sharedInstance().start(completionHandler: nil)
+                self?.load()
+            }
+        }
     }
 
     func gameEnded(score: Int) {

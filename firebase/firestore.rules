@@ -7,7 +7,8 @@ service cloud.firestore {
   match /databases/{database}/documents {
     match /users/{deviceId} {
       allow read: if true;
-      allow write: if request.resource.data.name is string
+      allow delete: if true; // in-app account deletion (App Store 5.1.1)
+      allow create, update: if request.resource.data.name is string
                    && request.resource.data.name.size() <= 50
                    && request.resource.data.avatar is int
                    && request.resource.data.avatar >= 0
@@ -15,7 +16,8 @@ service cloud.firestore {
     }
     match /boards/{board}/entries/{deviceId} {
       allow read: if true;
-      allow write: if request.resource.data.name is string
+      allow delete: if true; // in-app account deletion (App Store 5.1.1)
+      allow create, update: if request.resource.data.name is string
                    && request.resource.data.name.size() <= 50
                    && request.resource.data.score is int
                    && request.resource.data.score >= 0;
