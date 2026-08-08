@@ -10,7 +10,7 @@ Fully offline, zero dependencies, all visuals generated in code (SwiftUI + Sprit
 - Get captured by the next ring to score **+1**.
 - Aim through the planet's core for **PERFECT +2**.
 - Orbits spin faster the further you get. Best score is saved locally.
-- **Infinite levels**: every 5 captured planets is a new level — rings start big and easy, then shrink.
+- **Infinite levels**: every 20 captured planets is a new level — rings start big and easy, then shrink.
 
 ## Daily Challenge
 
