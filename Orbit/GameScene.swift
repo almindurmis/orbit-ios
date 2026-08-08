@@ -83,7 +83,7 @@ final class GameScene: SKScene {
         setupPlayer()
         buildHUD()
         setupSpaceDust()
-        startAsteroidSpawner()
+        startAmbientEvents()
         startRun(showMenu: true)
     }
 
@@ -109,33 +109,144 @@ final class GameScene: SKScene {
         cam.addChild(dust)
     }
 
-    private func startAsteroidSpawner() {
-        let loop = SKAction.repeatForever(.sequence([
-            .wait(forDuration: 10, withRange: 9),
-            .run { [weak self] in self?.spawnAsteroid() },
-        ]))
-        run(loop, withKey: "asteroids")
+    // Ambient flybys — asteroids, comets, the odd rocket, and frequent shooting
+    // stars — run in menu and gameplay alike (spawners live on the scene).
+    private func startAmbientEvents() {
+        run(.repeatForever(.sequence([
+            .wait(forDuration: 7, withRange: 6),
+            .run { [weak self] in self?.spawnAmbientEvent() },
+        ])), withKey: "ambient")
+        run(.repeatForever(.sequence([
+            .wait(forDuration: 5, withRange: 4),
+            .run { [weak self] in self?.spawnShootingStar() },
+        ])), withKey: "shootingStars")
+    }
+
+    private func spawnAmbientEvent() {
+        switch Int.random(in: 0..<10) {
+        case 0..<4: spawnAsteroid()
+        case 4..<8: spawnComet()
+        default: spawnRocket()
+        }
+    }
+
+    private func crossingCourse(margin: CGFloat, drift: CGFloat) -> (CGPoint, CGVector) {
+        let fromLeft = Bool.random()
+        let x = cam.position.x + (fromLeft ? -size.width / 2 - margin : size.width / 2 + margin)
+        let y = cam.position.y + CGFloat.random(in: -size.height / 2 ... size.height / 2)
+        let dx = (fromLeft ? 1 : -1) * (size.width + margin * 2)
+        return (CGPoint(x: x, y: y), CGVector(dx: dx, dy: CGFloat.random(in: -drift...drift)))
     }
 
     private func spawnAsteroid() {
         guard let texture = Textures.asteroids.randomElement() else { return }
+        let (start, delta) = crossingCourse(margin: 80, drift: 140)
         let asteroid = SKSpriteNode(texture: texture)
         asteroid.setScale(CGFloat.random(in: 0.35...0.9))
         asteroid.alpha = 0.85
         asteroid.zPosition = -8
-        let fromLeft = Bool.random()
-        let x = cam.position.x + (fromLeft ? -size.width / 2 - 80 : size.width / 2 + 80)
-        let y = cam.position.y + CGFloat.random(in: -size.height / 2 ... size.height / 2)
-        asteroid.position = CGPoint(x: x, y: y)
+        asteroid.position = start
         addChild(asteroid)
         let duration = TimeInterval.random(in: 7...12)
         asteroid.run(.group([
-            .moveBy(x: (fromLeft ? 1 : -1) * (size.width + 160),
-                    y: CGFloat.random(in: -140...140),
-                    duration: duration),
+            .move(by: delta, duration: duration),
             .rotate(byAngle: CGFloat.random(in: -3...3), duration: duration),
         ]))
         asteroid.run(.sequence([.wait(forDuration: duration), .removeFromParent()]))
+    }
+
+    private func spawnComet() {
+        let (start, delta) = crossingCourse(margin: 100, drift: 260)
+        let comet = SKNode()
+        comet.position = start
+        comet.zPosition = -7
+        let halo = SKSpriteNode(texture: Textures.softDot)
+        halo.size = CGSize(width: 26, height: 26)
+        halo.color = SKColor(red: 0.75, green: 0.95, blue: 1, alpha: 1)
+        halo.colorBlendFactor = 1
+        halo.blendMode = .add
+        comet.addChild(halo)
+        let core = SKShapeNode(circleOfRadius: 3.2)
+        core.fillColor = .white
+        core.strokeColor = .clear
+        comet.addChild(core)
+        let trail = SKEmitterNode()
+        trail.particleTexture = Textures.softDot
+        trail.particleBirthRate = 90
+        trail.particleLifetime = 1.1
+        trail.particleAlpha = 0.45
+        trail.particleAlphaSpeed = -0.4
+        trail.particleScale = 0.3
+        trail.particleScaleSpeed = -0.25
+        trail.particleBlendMode = .add
+        trail.particleColor = SKColor(red: 0.6, green: 0.9, blue: 1, alpha: 1)
+        trail.particleColorBlendFactor = 1
+        trail.targetNode = self
+        comet.addChild(trail)
+        addChild(comet)
+        comet.run(.sequence([
+            .move(by: delta, duration: TimeInterval.random(in: 3.5...6)),
+            .removeFromParent(),
+        ]))
+    }
+
+    private func spawnShootingStar() {
+        let (start, fullDelta) = crossingCourse(margin: 40, drift: 320)
+        let delta = CGVector(dx: fullDelta.dx * 0.45, dy: fullDelta.dy)
+        let star = SKNode()
+        star.position = start
+        star.zPosition = -9
+        let head = SKSpriteNode(texture: Textures.softDot)
+        head.size = CGSize(width: 14, height: 14)
+        head.blendMode = .add
+        star.addChild(head)
+        let trail = SKEmitterNode()
+        trail.particleTexture = Textures.softDot
+        trail.particleBirthRate = 140
+        trail.particleLifetime = 0.45
+        trail.particleAlpha = 0.5
+        trail.particleAlphaSpeed = -1.1
+        trail.particleScale = 0.18
+        trail.particleScaleSpeed = -0.35
+        trail.particleBlendMode = .add
+        trail.targetNode = self
+        star.addChild(trail)
+        addChild(star)
+        star.run(.sequence([
+            .move(by: delta, duration: TimeInterval.random(in: 0.7...1.2)),
+            .fadeOut(withDuration: 0.15),
+            .run { trail.particleBirthRate = 0 },
+            .wait(forDuration: 0.5),
+            .removeFromParent(),
+        ]))
+    }
+
+    private func spawnRocket() {
+        let (start, delta) = crossingCourse(margin: 120, drift: 200)
+        let rocket = SKSpriteNode(texture: Textures.rocket)
+        rocket.position = start
+        rocket.zPosition = -6
+        rocket.setScale(CGFloat.random(in: 0.8...1.1))
+        rocket.zRotation = atan2(delta.dy, delta.dx) - .pi / 2
+        let flame = SKEmitterNode()
+        flame.particleTexture = Textures.softDot
+        flame.particleBirthRate = 80
+        flame.particleLifetime = 0.5
+        flame.particleAlpha = 0.6
+        flame.particleAlphaSpeed = -1.2
+        flame.particleScale = 0.22
+        flame.particleScaleSpeed = -0.3
+        flame.particleBlendMode = .add
+        flame.particleColor = SKColor(red: 1.0, green: 0.62, blue: 0.25, alpha: 1)
+        flame.particleColorBlendFactor = 1
+        flame.position = CGPoint(x: 0, y: -26)
+        flame.targetNode = self
+        rocket.addChild(flame)
+        addChild(rocket)
+        rocket.run(.sequence([
+            .move(by: delta, duration: TimeInterval.random(in: 6...9)),
+            .removeFromParent(),
+        ]))
     }
 
     private func setupPlayer() {

@@ -50,7 +50,7 @@ final class Planet: SKNode {
     }
 
     // Backdrop lives as children so it scrolls and gets culled with its planet.
-    func sprinkleStars(count: Int = 26) {
+    func sprinkleStars(count: Int = 34) {
         let tints: [SKColor] = [
             .white, .white,
             SKColor(red: 0.72, green: 0.85, blue: 1.0, alpha: 1),
@@ -64,7 +64,7 @@ final class Planet: SKNode {
             let tint = tints.randomElement() ?? .white
 
             // A few bright stars get a soft glow halo; the rest are pinpricks.
-            if i < 3 {
+            if i < 6 {
                 let glow = SKSpriteNode(texture: Textures.softDot)
                 glow.size = CGSize(width: CGFloat.random(in: 10...20), height: CGFloat.random(in: 10...20))
                 glow.color = tint
