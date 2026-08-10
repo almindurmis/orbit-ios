@@ -4,6 +4,9 @@ enum Palette {
     static let background = SKColor(red: 0.027, green: 0.031, blue: 0.078, alpha: 1)
     static let gold = SKColor(red: 1.0, green: 0.84, blue: 0.42, alpha: 1)
     static let cyan = SKColor(red: 0.32, green: 0.9, blue: 1.0, alpha: 1)
+    static let shieldBlue = SKColor(red: 0.35, green: 0.78, blue: 1.0, alpha: 1)
+    static let magnetViolet = SKColor(red: 0.72, green: 0.5, blue: 1.0, alpha: 1)
+    static let unstableRed = SKColor(red: 1.0, green: 0.45, blue: 0.35, alpha: 1)
     static let textPrimary = SKColor.white
     static let textDim = SKColor(white: 1, alpha: 0.45)
 

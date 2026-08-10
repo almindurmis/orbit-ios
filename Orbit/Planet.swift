@@ -1,18 +1,31 @@
 import SpriteKit
 
+// Power-up planets appear occasionally in the chain; each changes what a
+// capture does (see GameScene.capture) and reads differently at a glance.
+enum PlanetKind {
+    case normal, golden, shield, magnet, unstable
+}
+
 final class Planet: SKNode {
     let ringRadius: CGFloat
     let coreRadius: CGFloat
     let orbitSpeed: CGFloat
     let color: SKColor
+    let kind: PlanetKind
+
+    // Unstable planets shrink their ring while orbited; everyone else keeps this fixed.
+    private(set) var currentRingRadius: CGFloat
 
     private let ring: SKShapeNode
 
-    init(ringRadius: CGFloat, coreRadius: CGFloat, orbitSpeed: CGFloat, color: SKColor) {
+    init(ringRadius: CGFloat, coreRadius: CGFloat, orbitSpeed: CGFloat, color: SKColor,
+         kind: PlanetKind = .normal) {
         self.ringRadius = ringRadius
         self.coreRadius = coreRadius
         self.orbitSpeed = orbitSpeed
         self.color = color
+        self.kind = kind
+        self.currentRingRadius = ringRadius
         self.ring = SKShapeNode(circleOfRadius: ringRadius)
         super.init()
 
@@ -35,9 +48,73 @@ final class Planet: SKNode {
         ring.glowWidth = 3
         ring.fillColor = .clear
         addChild(ring)
+
+        decorate()
     }
 
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+
+    private func decorate() {
+        switch kind {
+        case .normal:
+            break
+        case .golden:
+            let outer = SKShapeNode(circleOfRadius: ringRadius + 9)
+            outer.strokeColor = color.withAlphaComponent(0.5)
+            outer.lineWidth = 1
+            outer.glowWidth = 2
+            outer.run(.repeatForever(.sequence([
+                .fadeAlpha(to: 0.35, duration: 0.7),
+                .fadeAlpha(to: 1.0, duration: 0.7),
+            ])))
+            addChild(outer)
+            let sparkle = SKEmitterNode()
+            sparkle.particleTexture = Textures.softDot
+            sparkle.particleBirthRate = 10
+            sparkle.particleLifetime = 0.9
+            sparkle.particleAlpha = 0.7
+            sparkle.particleAlphaSpeed = -0.8
+            sparkle.particleScale = 0.16
+            sparkle.particleScaleSpeed = -0.12
+            sparkle.particleSpeed = 26
+            sparkle.emissionAngleRange = .pi * 2
+            sparkle.particlePositionRange = CGVector(dx: coreRadius * 2, dy: coreRadius * 2)
+            sparkle.particleBlendMode = .add
+            sparkle.particleColor = color
+            sparkle.particleColorBlendFactor = 1
+            addChild(sparkle)
+        case .shield:
+            let inner = SKShapeNode(circleOfRadius: ringRadius - 9)
+            inner.strokeColor = color.withAlphaComponent(0.45)
+            inner.lineWidth = 1
+            inner.glowWidth = 1.5
+            addChild(inner)
+        case .magnet:
+            let band = SKShapeNode(circleOfRadius: ringRadius + 12)
+            band.strokeColor = color.withAlphaComponent(0.4)
+            band.lineWidth = 1
+            band.glowWidth = 2
+            band.run(.repeatForever(.sequence([
+                .group([.scale(to: 1.08, duration: 0.9), .fadeAlpha(to: 0.2, duration: 0.9)]),
+                .group([.scale(to: 1.0, duration: 0.0), .fadeAlpha(to: 1.0, duration: 0.0)]),
+            ])))
+            addChild(band)
+        case .unstable:
+            ring.run(.repeatForever(.sequence([
+                .fadeAlpha(to: 0.45, duration: 0.12),
+                .fadeAlpha(to: 1.0, duration: 0.16),
+            ])))
+        }
+    }
+
+    // Called every frame while the player orbits an unstable planet.
+    func shrinkRing(dt: CGFloat) {
+        guard kind == .unstable else { return }
+        let floor = coreRadius + 30
+        guard currentRingRadius > floor else { return }
+        currentRingRadius = max(floor, currentRingRadius - 16 * dt)
+        ring.setScale(currentRingRadius / ringRadius)
+    }
 
     func pulse() {
         ring.removeAllActions()
