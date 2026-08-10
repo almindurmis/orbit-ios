@@ -546,6 +546,15 @@ final class GameScene: SKScene {
 
     // Deterministic (seeded) so daily runs stay identical for everyone.
     private func rollKind() -> PlanetKind {
+        // Marketing captures: surface the special planets early and predictably.
+        if ProcessInfo.processInfo.arguments.contains("-screenshots") {
+            switch planetCount % 4 {
+            case 1: return .golden
+            case 2: return .shield
+            case 3: return .magnet
+            default: return .unstable
+            }
+        }
         guard planetCount >= 5 else { return .normal }
         let roll = rng.cgFloat(in: 0...1)
         switch roll {

@@ -61,7 +61,9 @@ final class ScreenshotTests: XCTestCase {
 
     private func launchFresh() -> XCUIApplication {
         let app = XCUIApplication()
-        app.launchArguments = ["-screenshots"]
+        // The extra pairs pre-seed UserDefaults (argument domain) so the menu
+        // shows a lived-in pilot level, XP bar, and best score.
+        app.launchArguments = ["-screenshots", "-progress.xp", "230", "-bestScore", "47"]
         app.launch()
         sleep(3) // splash + settle
         return app
