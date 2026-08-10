@@ -75,6 +75,7 @@ final class GameScene: SKScene {
     private let dailySubLabel = SKLabelNode(fontNamed: "HelveticaNeue-Medium")
     private let overStreakLabel = SKLabelNode(fontNamed: "HelveticaNeue-Medium")
     private let menuButtonLabel = SKLabelNode(fontNamed: "HelveticaNeue-Medium")
+    private var menuButton: SKShapeNode!
 
     // MARK: - Setup
 
@@ -319,8 +320,8 @@ final class GameScene: SKScene {
         menuLayer.addChild(menuBestLabel)
 
         menuTapLabel.text = "TAP TO PLAY"
-        menuTapLabel.fontSize = 17
-        menuTapLabel.fontColor = Palette.textDim
+        menuTapLabel.fontSize = 18
+        menuTapLabel.fontColor = Palette.cyan
         menuTapLabel.run(pulseForever())
         menuLayer.addChild(menuTapLabel)
 
@@ -368,15 +369,24 @@ final class GameScene: SKScene {
         gameOverLayer.addChild(overStreakLabel)
 
         overTapLabel.text = "TAP TO RETRY"
-        overTapLabel.fontSize = 17
-        overTapLabel.fontColor = Palette.textDim
+        overTapLabel.fontSize = 18
+        overTapLabel.fontColor = Palette.cyan
         overTapLabel.run(pulseForever())
         gameOverLayer.addChild(overTapLabel)
 
+        menuButton = SKShapeNode(rectOf: CGSize(width: 148, height: 46), cornerRadius: 23)
+        menuButton.fillColor = SKColor(white: 1, alpha: 0.10)
+        menuButton.strokeColor = SKColor(white: 1, alpha: 0.22)
+        menuButton.lineWidth = 1
+        menuButton.run(.repeatForever(.sequence([.fadeAlpha(to: 0.7, duration: 1.4),
+                                                 .fadeAlpha(to: 1.0, duration: 1.4)])))
+        gameOverLayer.addChild(menuButton)
+
         menuButtonLabel.text = "MENU"
         menuButtonLabel.fontSize = 15
-        menuButtonLabel.fontColor = Palette.textDim
-        gameOverLayer.addChild(menuButtonLabel)
+        menuButtonLabel.fontColor = Palette.textPrimary
+        menuButtonLabel.verticalAlignmentMode = .center
+        menuButton.addChild(menuButtonLabel)
 
         layoutHUD()
     }
@@ -403,7 +413,7 @@ final class GameScene: SKScene {
         finalBestLabel.position = CGPoint(x: 0, y: -56)
         overStreakLabel.position = CGPoint(x: 0, y: -90)
         overTapLabel.position = CGPoint(x: 0, y: -h * 0.26)
-        menuButtonLabel.position = CGPoint(x: 0, y: -h * 0.37)
+        menuButton.position = CGPoint(x: 0, y: -h * 0.37)
     }
 
     override func didChangeSize(_ oldSize: CGSize) {
@@ -714,7 +724,7 @@ final class GameScene: SKScene {
         case .dead:
             guard gameOverReady else { return }
             let location = touch.location(in: gameOverLayer)
-            if menuButtonLabel.frame.insetBy(dx: -28, dy: -20).contains(location) {
+            if menuButton.frame.insetBy(dx: -16, dy: -14).contains(location) {
                 startRun(showMenu: true)
             } else {
                 startRun(showMenu: false)

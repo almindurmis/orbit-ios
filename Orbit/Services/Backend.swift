@@ -103,19 +103,70 @@ enum Backend {
         }
     }
 
-    static func leaderboard(_ period: LeaderboardPeriod) async throws -> [LeaderboardEntry] {
+    // MARK: - Paginated leaderboard
+    // The board is never downloaded whole: rank comes from server-side count
+    // aggregations and rows are fetched in cursor pages, so cost stays flat
+    // no matter how many players exist.
+
+    private static func entriesRef(_ period: LeaderboardPeriod) -> CollectionReference {
+        Firestore.firestore().collection("boards").document(period.key).collection("entries")
+    }
+
+    private static func ordered(_ period: LeaderboardPeriod) -> Query {
+        entriesRef(period).order(by: "score", descending: true)
+    }
+
+    static func entry(from doc: DocumentSnapshot) -> LeaderboardEntry {
+        let data = doc.data() ?? [:]
+        return LeaderboardEntry(id: doc.documentID,
+                                name: data["name"] as? String ?? "…",
+                                avatar: data["avatar"] as? Int ?? 0,
+                                score: data["score"] as? Int ?? 0)
+    }
+
+    static func myEntryDocument(_ period: LeaderboardPeriod) async throws -> DocumentSnapshot? {
+        guard isConfigured else { return nil }
+        let doc = try await entriesRef(period).document(DeviceID.id).getDocument()
+        return doc.exists ? doc : nil
+    }
+
+    // Firestore breaks score ties by document ID descending (implicit __name__
+    // key follows the last sort direction), so "ahead of me" = higher score,
+    // or same score with a higher document ID.
+    static func rank(of doc: DocumentSnapshot, in period: LeaderboardPeriod) async throws -> Int {
+        let score = doc.data()?["score"] as? Int ?? 0
+        let ref = entriesRef(period)
+        let above = try await ref.whereField("score", isGreaterThan: score)
+            .count.getAggregation(source: .server).count.intValue
+        let tiesAhead = try await ref.whereField("score", isEqualTo: score)
+            .whereField(FieldPath.documentID(), isGreaterThan: doc.documentID)
+            .count.getAggregation(source: .server).count.intValue
+        return above + tiesAhead + 1
+    }
+
+    static func page(_ period: LeaderboardPeriod, after doc: DocumentSnapshot?,
+                     limit: Int) async throws -> [DocumentSnapshot] {
         guard isConfigured else { return [] }
-        let snapshot = try await Firestore.firestore()
-            .collection("boards").document(period.key).collection("entries")
-            .order(by: "score", descending: true)
-            .limit(to: 100)
-            .getDocuments()
-        return snapshot.documents.map { doc in
-            let data = doc.data()
-            return LeaderboardEntry(id: doc.documentID,
-                                    name: data["name"] as? String ?? "…",
-                                    avatar: data["avatar"] as? Int ?? 0,
-                                    score: data["score"] as? Int ?? 0)
-        }
+        var query = ordered(period).limit(to: limit)
+        if let doc { query = query.start(afterDocument: doc) }
+        return try await query.getDocuments().documents
+    }
+
+    static func page(_ period: LeaderboardPeriod, endingBefore doc: DocumentSnapshot,
+                     limit: Int) async throws -> [DocumentSnapshot] {
+        guard isConfigured else { return [] }
+        return try await ordered(period)
+            .end(beforeDocument: doc)
+            .limit(toLast: limit)
+            .getDocuments().documents
+    }
+
+    static func page(_ period: LeaderboardPeriod, startingAt doc: DocumentSnapshot,
+                     limit: Int) async throws -> [DocumentSnapshot] {
+        guard isConfigured else { return [] }
+        return try await ordered(period)
+            .start(atDocument: doc)
+            .limit(to: limit)
+            .getDocuments().documents
     }
 }
