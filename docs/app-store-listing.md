@@ -33,6 +33,16 @@ EASY TO START, HARD TO PUT DOWN
 • Orbits spin faster the deeper you go
 • Infinite levels — every 20 planets is a new one
 
+POWER-UP PLANETS
+• Golden — worth double points
+• Shield — survive one missed launch
+• Magnet — widens the capture ring for your next hops
+• Unstable — its ring shrinks while you orbit; extra points for the risk
+
+BECOME A PILOT
+• Every run earns permanent XP — level up your pilot
+• Unlock new trail colors as you climb
+
 DAILY CHALLENGE
 • One seeded run per day — the same planets for everyone on Earth
 • Unlimited retries all day
@@ -46,6 +56,8 @@ COMPETE WORLDWIDE
 A LIVING COSMOS
 • Glowing neon planets, nebulae, and drifting space dust
 • Comets, shooting stars, asteroids, and little rockets passing by
+• Musical capture notes over a soft ambient soundtrack — respects your
+  silent switch and never interrupts your own music
 • Soft haptics that make every capture feel right
 
 Classic mode works fully offline — perfect for the subway. Your best scores reach the leaderboard when you're back online.
