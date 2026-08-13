@@ -73,6 +73,23 @@ planet,gravity,one tap,casual,offline,streak,galaxy,stars,hyper casual,reflex,ti
 
 (94 characters. Don't repeat words already in the name/subtitle — orbit, space, arcade, daily, leaderboard are indexed from there.)
 
+## What's New (v1.0.1)
+
+```
+Your journey to becoming a space pilot starts here!
+
+• POWER-UP PLANETS — Golden planets are worth double, Shields save you from
+  one missed launch, Magnets widen your capture ring, and Unstable planets
+  shrink while you orbit for bonus points
+• PILOT PROGRESSION — every run now earns permanent XP; level up your pilot
+  and unlock new trail colors
+• SOUND — musical capture notes over a soft ambient soundtrack (respects your
+  silent switch and never interrupts your own music)
+• Leaderboards now open right at your rank and scroll smoothly in both
+  directions, however big the board gets
+• Fresh menu polish — clearer buttons and a rounded MENU pill
+```
+
 ## What's New (v1.0)
 
 > First launch! Tap between glowing orbits, take on the daily challenge, and climb the worldwide leaderboards.
