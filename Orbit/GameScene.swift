@@ -883,6 +883,16 @@ final class GameScene: SKScene {
         for ghost in activeGhosts { ghost.removeFromParent() }
         activeGhosts.removeAll()
         if mode == .daily && !showMenu {
+            // Marketing captures: a canned rival ghost orbiting the first planet.
+            if ProcessInfo.processInfo.arguments.contains("-screenshots") {
+                var samples: [Double] = []
+                for i in 0..<160 {
+                    let t = Double(i) * 0.125
+                    let angle = Double.pi / 2 + t * 1.5
+                    samples += [t, cos(angle) * 118, sin(angle) * 118]
+                }
+                addGhost(GhostRun(name: "NOVA", samples: samples, isMine: false), color: Palette.gold)
+            }
             if let mine = Ghosts.loadLocal() {
                 addGhost(GhostRun(name: "YOU", samples: mine, isMine: true), color: Palette.cyan)
             }
@@ -1160,14 +1170,17 @@ final class GameScene: SKScene {
         let perp = CGPoint(x: -dir.y, y: dir.x)
 
         // Asteroid wall from sector 3 (gauntlet: from the first corridor).
+        // Early sectors see them rarely and pass them easily; density ramps later.
         let wallChance: CGFloat = gauntlet ? 0.5
-            : level >= 3 ? min(0.22 + CGFloat(level) * 0.03, 0.5) : 0
+            : level >= 3 ? min(0.10 + CGFloat(level - 3) * 0.04, 0.45) : 0
         let wantWall = forceShots ? planetCount == 2 : rng.cgFloat(in: 0...1) < wallChance
         if wantWall {
             let t = rng.cgFloat(in: 0.42...0.6)
             let side: CGFloat = rng.cgFloat(in: 0...1) < 0.5 ? 1 : -1
-            let clearance = rng.cgFloat(in: 42...64)
-            let count = 3 + Int(rng.next() % 3)
+            // Wider center gap and fewer rocks below sector 8 (gauntlet excepted).
+            let easy = !gauntlet && level < 8
+            let clearance = rng.cgFloat(in: 42...64) + (easy ? CGFloat(8 - level) * 7 : 0)
+            let count = (easy ? 2 : 3) + Int(rng.next() % (easy ? 2 : 3))
             var rocks: [AsteroidWall.Rock] = []
             for i in 0..<count {
                 let radius = rng.cgFloat(in: 13...19)
@@ -1181,7 +1194,8 @@ final class GameScene: SKScene {
         }
 
         // Bouncer from sector 5 (gauntlet: everywhere).
-        let bouncerChance: CGFloat = gauntlet ? 0.4 : level >= 5 ? 0.28 : 0
+        let bouncerChance: CGFloat = gauntlet ? 0.4
+            : level >= 5 ? min(0.12 + CGFloat(level - 5) * 0.03, 0.32) : 0
         let wantBouncer = forceShots ? planetCount == 3 : rng.cgFloat(in: 0...1) < bouncerChance
         if wantBouncer {
             let t = rng.cgFloat(in: 0.35...0.65)
@@ -1194,12 +1208,17 @@ final class GameScene: SKScene {
         }
 
         // Rotating gate from sector 8 (gauntlet: from the start).
-        let gateChance: CGFloat = gauntlet ? 0.35 : level >= 8 ? 0.3 : 0
+        let gateChance: CGFloat = gauntlet ? 0.35
+            : level >= 8 ? min(0.15 + CGFloat(level - 8) * 0.03, 0.32) : 0
         let wantGate = forceShots ? planetCount == 4 : rng.cgFloat(in: 0...1) < gateChance
         if wantGate {
             let spin: CGFloat = rng.cgFloat(in: 0...1) < 0.5 ? 1 : -1
+            // Smaller blocked arc while gates are new (below sector 12).
+            let halfArc = !gauntlet && level < 12
+                ? rng.cgFloat(in: 0.42...0.58)
+                : rng.cgFloat(in: 0.55...0.8)
             let gate = RotatingGate(orbitRadius: planet.ringRadius + 34,
-                                    halfArc: rng.cgFloat(in: 0.55...0.8),
+                                    halfArc: halfArc,
                                     angularSpeed: spin * rng.cgFloat(in: 0.8...1.3),
                                     color: sector.color)
             planet.addChild(gate)
@@ -1852,6 +1871,15 @@ final class GameScene: SKScene {
         gameOverLayer.run(.fadeIn(withDuration: 0.25))
         gameOverReady = true
         AdsManager.shared.gameEnded(score: score)
+
+        // One-time native rating prompt once the pilot has proven invested (LV 3+),
+        // fired on the calm game-over moment. Never during automation runs.
+        if Progress.level >= 3,
+           !UserDefaults.standard.bool(forKey: "review.prompted"),
+           !ProcessInfo.processInfo.arguments.contains("-screenshots") {
+            UserDefaults.standard.set(true, forKey: "review.prompted")
+            bridge?.reviewMoment = true
+        }
     }
 
     private var modeName: String {

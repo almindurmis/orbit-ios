@@ -1,5 +1,6 @@
 import SwiftUI
 import SpriteKit
+import StoreKit
 
 // Published by GameScene so SwiftUI chrome only shows over the menu.
 final class GameBridge: ObservableObject {
@@ -9,9 +10,12 @@ final class GameBridge: ObservableObject {
     // Scene-triggered sheets: zen/revive upsell and the Run Lab.
     @Published var openPaywall = false
     @Published var openRunLab = false
+    // A calm game-over moment for the one-time native rating prompt (pilot LV 3+).
+    @Published var reviewMoment = false
 }
 
 struct RootView: View {
+    @Environment(\.requestReview) private var requestReview
     @State private var scene: GameScene = {
         let scene = GameScene(size: CGSize(width: 390, height: 844))
         scene.scaleMode = .resizeFill
@@ -89,6 +93,14 @@ struct RootView: View {
                     self.profile = nil
                     pendingAvatar = Int.random(in: 0..<Avatars.count)
                 }
+            }
+        }
+        .onChange(of: bridge.reviewMoment) { moment in
+            guard moment else { return }
+            bridge.reviewMoment = false
+            // Give the game-over card a beat to settle before the system alert.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+                requestReview()
             }
         }
         .onAppear {

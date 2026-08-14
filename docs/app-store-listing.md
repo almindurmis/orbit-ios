@@ -19,48 +19,58 @@ Everything to paste into App Store Connect.
 
 ## Promotional text (170 max, editable anytime)
 
-> Today's daily run is live — the same planets for everyone. Tap, orbit, and see how you rank on this week's leaderboard.
+> Today's run is live — same planets, same walls, same gates for everyone. Race the top pilots' ghosts and see how far you fly.
 
 ## Description
 
 ```
 One tap. Endless orbits. How far can you fly?
 
-Orbit is a calm, glowing space arcade game built around a single move: tap to leave your orbit, fly straight, and get caught by the next planet's ring. Hit the core dead-center for a PERFECT and double points.
+Orbit is a glowing space arcade game built around a single move: tap to leave
+your orbit, fly straight, and get caught by the next planet's ring. Hit the
+core dead-center for a PERFECT — chain them and your score multiplies up to x5
+while your trail catches fire.
 
-EASY TO START, HARD TO PUT DOWN
-• Rings start big and forgiving, then shrink as you level up
-• Orbits spin faster the deeper you go
-• Infinite levels — every 20 planets is a new one
+A GALAXY THAT FIGHTS BACK
+• Sectors — every level is a named region with its own colors and sky
+• Asteroid walls block the corridors; graze one for CLOSE CALL bonus points
+• Bouncers ricochet your flight — bank shots are real
+• Rotating gates guard planets; slip through the gap or don't pass at all
+• Guardians — every 10th sector, a giant planet behind twin rotating gates
 
 POWER-UP PLANETS
-• Golden — worth double points
-• Shield — survive one missed launch
-• Magnet — widens the capture ring for your next hops
-• Unstable — its ring shrinks while you orbit; extra points for the risk
+• Golden — double points · Shield — survive one miss
+• Magnet — wider captures · Unstable — shrinking ring, extra points
 
-BECOME A PILOT
-• Every run earns permanent XP — level up your pilot
-• Unlock new trail colors as you climb
-
-DAILY CHALLENGE
-• One seeded run per day — the same planets for everyone on Earth
-• Unlimited retries all day
+RACE TODAY'S GHOSTS
+• One seeded daily run — the same world for everyone on Earth
+• Your best run and today's top pilots fly beside you as live ghosts
+• Some days the whole world mutates: tiny rings, hyper orbits
 • Build a streak by playing every day
 
-COMPETE WORLDWIDE
-• Weekly, monthly, and all-time leaderboards
-• No account, no password — just pick a name and play
-• 20 avatars to choose from
+THE WEEKLY GAUNTLET
+• A brutal seeded run with hazards from the very first corridor
+• Its own leaderboard — glory resets every Monday
+
+BECOME A PILOT
+• Permanent XP, pilot levels, and three fresh missions every day
+• The Hangar: 6 ship looks and trail colors to unlock and combine
+• Weekly, monthly, and all-time leaderboards — no account, just a name
+
+RUN LAB
+• Fly a friend's seed code: same planets, same walls, best score wins
+
+ORBIT PREMIUM (optional subscription)
+• No ads · one revive per run · Zen Drift · create your own challenge codes
+• Full pilot stats · animated PRISM & EMBERS trails · a gold star on the
+  leaderboard · double mission XP
 
 A LIVING COSMOS
-• Glowing neon planets, nebulae, and drifting space dust
-• Comets, shooting stars, asteroids, and little rockets passing by
-• Musical capture notes over a soft ambient soundtrack — respects your
-  silent switch and never interrupts your own music
-• Soft haptics that make every capture feel right
+• Neon planets, nebulae, comets, shooting stars, and a deep-space soundtrack
+  of metallic tones and sub-bass swells — it respects your silent switch
 
-Classic mode works fully offline — perfect for the subway. Your best scores reach the leaderboard when you're back online.
+Classic mode works fully offline — perfect for the subway. Your best scores
+reach the leaderboard when you're back online.
 
 One more run. You know you want to.
 ```
@@ -68,10 +78,13 @@ One more run. You know you want to.
 ## Keywords (100 max, comma-separated)
 
 ```
-planet,gravity,one tap,casual,offline,streak,galaxy,stars,hyper casual,reflex,timing,hop,flappy
+planet,gravity,one tap,casual,offline,streak,galaxy,ghost,hyper casual,reflex,dodge,boss,flappy
 ```
 
-(94 characters. Don't repeat words already in the name/subtitle — orbit, space, arcade, daily, leaderboard are indexed from there.)
+(95 characters. Don't repeat words already in the name/subtitle — orbit, space,
+arcade, daily, leaderboard are indexed from there. "ghost", "dodge" and "boss"
+replace the weaker "stars", "timing" and "hop" now that racing ghosts, hazards
+and guardians are core features.)
 
 ## What's New (v1.1.0)
 

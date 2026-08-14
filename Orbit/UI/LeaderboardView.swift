@@ -237,14 +237,31 @@ struct LeaderboardView: View {
                 .foregroundStyle(ranked.rank <= 3 ? Theme.gold : Theme.textDim)
                 .frame(width: 44)
             AvatarView(index: entry.avatar, size: 38)
+                .overlay {
+                    if entry.premium {
+                        Circle()
+                            .stroke(
+                                AngularGradient(colors: [Theme.gold, .white, Theme.gold,
+                                                         Color(red: 1, green: 0.7, blue: 0.2), Theme.gold],
+                                                center: .center),
+                                lineWidth: 2.5)
+                            .shadow(color: Theme.gold.opacity(0.7), radius: 4)
+                    }
+                }
             Text(entry.name)
-                .font(.system(size: 16, weight: isMe ? .bold : .medium))
+                .font(.system(size: 16, weight: isMe || entry.premium ? .bold : .medium))
                 .foregroundStyle(entry.premium ? Theme.gold : .white)
                 .lineLimit(1)
             if entry.premium {
-                Image(systemName: "star.fill")
-                    .font(.system(size: 10))
-                    .foregroundStyle(Theme.gold)
+                Text("★ PREMIUM")
+                    .font(.system(size: 8, weight: .heavy))
+                    .foregroundStyle(.black)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 3)
+                    .background(
+                        LinearGradient(colors: [Color(red: 1, green: 0.9, blue: 0.55), Theme.gold],
+                                       startPoint: .top, endPoint: .bottom),
+                        in: Capsule())
             }
             if isMe {
                 Text("YOU")
@@ -263,6 +280,12 @@ struct LeaderboardView: View {
         .padding(.horizontal, 14)
         .background(isMe ? Theme.gold.opacity(0.18) : Color.white.opacity(0.09),
                     in: RoundedRectangle(cornerRadius: 14))
+        .overlay {
+            if entry.premium {
+                RoundedRectangle(cornerRadius: 14)
+                    .stroke(Theme.gold.opacity(0.45), lineWidth: 1)
+            }
+        }
     }
 
     private func message(_ text: String) -> some View {
