@@ -24,6 +24,7 @@ targets:
     scheme:
       testTargets:
         - OrbitUITests
+      storeKitConfiguration: Orbit/Products.storekit
     sources:
       - Orbit
     dependencies:

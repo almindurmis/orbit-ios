@@ -66,6 +66,29 @@ final class ScreenshotTests: XCTestCase {
         snap("07-daily")
     }
 
+    // Captures the paywall for the subscription review-information screenshot.
+    // The scheme's StoreKit configuration supplies the two products.
+    func testPaywallShot() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["-screenshots", "-fakestore",
+                               "-progress.xp", "230", "-bestScore", "47"]
+        app.launch()
+        sleep(3)
+        let nameField = app.textFields.firstMatch
+        if nameField.waitForExistence(timeout: 3) {
+            nameField.tap()
+            nameField.typeText("Nova")
+            app.buttons["START"].firstMatch.tap()
+            sleep(2)
+        }
+        let star = app.buttons["premiumButton"]
+        if star.waitForExistence(timeout: 4) {
+            star.tap()
+            sleep(3)
+            snap("09-paywall")
+        }
+    }
+
     // Drives ~30s of real gameplay for the App Store preview video recording.
     // Run alone with -only-testing while `simctl io recordVideo` captures.
     func testPreviewDrive() throws {
