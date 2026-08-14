@@ -4,6 +4,8 @@ import SpriteKit
 // Published by GameScene so SwiftUI chrome only shows over the menu.
 final class GameBridge: ObservableObject {
     @Published var inMenu = true
+    // Set by the scene when the pilot card is tapped — opens the Hangar sheet.
+    @Published var openHangar = false
 }
 
 struct RootView: View {
@@ -54,6 +56,9 @@ struct RootView: View {
         }
         .sheet(isPresented: $showLeaderboard) {
             LeaderboardView()
+        }
+        .sheet(isPresented: $bridge.openHangar, onDismiss: { scene.refreshAfterHangar() }) {
+            HangarView()
         }
         .sheet(isPresented: $showProfile) {
             if let profile {

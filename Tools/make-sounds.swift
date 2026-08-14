@@ -1,7 +1,10 @@
 // Generates every sound in Orbit/Sounds as 16-bit mono WAVs.
 // Run from the repo root: swift Tools/make-sounds.swift
-// The ambient pad only uses frequencies that fit whole cycles into its 12s
-// length, so it loops seamlessly.
+//
+// Sound design: deep space, not piano lessons — metallic FM tones on a dark
+// phrygian ladder, sub-bass swells, dissonant beating drones. The ambient pad
+// only uses frequencies that fit whole cycles into its 12s length (k/12 Hz),
+// so it loops seamlessly.
 import Foundation
 
 let sampleRate = 44100.0
@@ -29,19 +32,6 @@ func envelope(_ t: Double, attack: Double, decay: Double) -> Double {
     t < attack ? t / attack : exp(-(t - attack) / decay)
 }
 
-// A note = fundamental + soft second harmonic with an exponential decay.
-func note(freq: Double, duration: Double, attack: Double = 0.005,
-          decay: Double, gain: Double, detune: Double = 0) -> [Double] {
-    let n = Int(duration * sampleRate)
-    return (0..<n).map { i in
-        let t = Double(i) / sampleRate
-        let e = envelope(t, attack: attack, decay: decay)
-        var s = sin(2 * .pi * freq * t) + 0.28 * sin(2 * .pi * freq * 2 * t)
-        if detune > 0 { s += 0.6 * sin(2 * .pi * (freq + detune) * t) }
-        return s * e * gain
-    }
-}
-
 func mix(_ tracks: [(offset: Double, samples: [Double])]) -> [Double] {
     let length = tracks.map { Int($0.offset * sampleRate) + $0.samples.count }.max() ?? 0
     var out = [Double](repeating: 0, count: length)
@@ -52,121 +42,176 @@ func mix(_ tracks: [(offset: Double, samples: [Double])]) -> [Double] {
     return out
 }
 
-try? FileManager.default.createDirectory(atPath: outDir, withIntermediateDirectories: true)
-
-// Capture plinks: A-major pentatonic ladder, one step per capture.
-let pentatonic: [Double] = [440, 494, 554, 659, 740, 880, 988, 1109]
-for (i, freq) in pentatonic.enumerated() {
-    writeWav(note(freq: freq, duration: 0.5, decay: 0.13, gain: 0.4), "plink\(i)")
-}
-
-// Perfect: two bright staggered notes.
-writeWav(mix([
-    (0, note(freq: 880, duration: 0.5, decay: 0.18, gain: 0.34)),
-    (0.07, note(freq: 1318.5, duration: 0.5, decay: 0.22, gain: 0.3)),
-]), "perfect")
-
-// Power-up: quick sparkle arpeggio.
-writeWav(mix([
-    (0, note(freq: 660, duration: 0.4, decay: 0.12, gain: 0.3)),
-    (0.06, note(freq: 880, duration: 0.4, decay: 0.13, gain: 0.28)),
-    (0.12, note(freq: 1108, duration: 0.45, decay: 0.16, gain: 0.28)),
-]), "powerup")
-
-// Shield save: low warble rising to a soft high note.
-writeWav(mix([
-    (0, note(freq: 330, duration: 0.5, decay: 0.2, gain: 0.3, detune: 3)),
-    (0.12, note(freq: 660, duration: 0.5, decay: 0.25, gain: 0.26)),
-]), "shield")
-
-// Level up: rising four-note arpeggio.
-writeWav(mix([
-    (0.00, note(freq: 523.25, duration: 0.5, decay: 0.16, gain: 0.3)),
-    (0.09, note(freq: 659.25, duration: 0.5, decay: 0.16, gain: 0.3)),
-    (0.18, note(freq: 783.99, duration: 0.5, decay: 0.18, gain: 0.3)),
-    (0.27, note(freq: 1046.5, duration: 0.7, decay: 0.26, gain: 0.32)),
-]), "levelup")
-
-// Bouncer ricochet: springy pitch-rising chirp with a light vibrato.
-func bounceSound() -> [Double] {
-    let n = Int(0.22 * sampleRate)
-    var phase = 0.0
+// Metallic FM hit: carrier + slightly-inharmonic modulator whose index decays
+// fast (bell-like bite), over a sub octave. The voice of every capture.
+func darkTone(freq: Double, duration: Double, attack: Double = 0.004,
+              decay: Double, gain: Double, modRatio: Double = 2.01,
+              modIndex: Double = 3.2, sub: Double = 0.5) -> [Double] {
+    let n = Int(duration * sampleRate)
     return (0..<n).map { i in
         let t = Double(i) / sampleRate
-        let freq = 240 + 2400 * t + 18 * sin(2 * .pi * 38 * t)
-        phase += 2 * .pi * freq / sampleRate
-        let e = envelope(t, attack: 0.004, decay: 0.08)
-        return (sin(phase) + 0.22 * sin(2 * phase)) * e * 0.34
+        let e = envelope(t, attack: attack, decay: decay)
+        let index = modIndex * exp(-t * 9)
+        let mod = sin(2 * .pi * freq * modRatio * t) * index
+        var s = sin(2 * .pi * freq * t + mod)
+        s += sub * sin(2 * .pi * freq / 2 * t)
+        return s * e * gain
     }
 }
-writeWav(bounceSound(), "bounce")
 
-// Streak: a PERFECT while the combo is hot — two fast bright notes, up a fifth.
-writeWav(mix([
-    (0, note(freq: 988, duration: 0.35, decay: 0.12, gain: 0.3)),
-    (0.05, note(freq: 1480, duration: 0.45, decay: 0.2, gain: 0.3)),
-]), "streak")
-
-// Death: pitch-dropping thump plus a low-passed noise burst.
-func deathSound() -> [Double] {
-    let n = Int(0.7 * sampleRate)
-    var phase = 0.0
-    var state: UInt64 = 12345
-    func noise() -> Double {
+// Deterministic noise (fixed LCG so regeneration is byte-identical).
+func makeNoise(seed: UInt64) -> () -> Double {
+    var state = seed
+    return {
         state = state &* 6364136223846793005 &+ 1442695040888963407
         return Double(state >> 11) / Double(UInt64(1) << 53) * 2 - 1
     }
+}
+
+try? FileManager.default.createDirectory(atPath: outDir, withIntermediateDirectories: true)
+
+// Capture ladder: A-phrygian rising from A2 — dark metallic pings, one step per
+// capture. Low, dissonant intervals instead of the old pentatonic plinks.
+let phrygian: [Double] = [110, 116.54, 130.81, 146.83, 155.56, 174.61, 196, 207.65]
+for (i, freq) in phrygian.enumerated() {
+    writeWav(darkTone(freq: freq, duration: 0.55, decay: 0.18, gain: 0.4), "plink\(i)")
+}
+
+// Perfect: a deep "BWOM" — sub swell with a tritone shimmer on top.
+writeWav(mix([
+    (0, darkTone(freq: 55, duration: 0.8, attack: 0.02, decay: 0.34, gain: 0.4,
+                 modRatio: 1.0, modIndex: 0.0, sub: 0.0)),
+    (0, darkTone(freq: 110, duration: 0.7, attack: 0.015, decay: 0.26, gain: 0.26)),
+    (0.05, darkTone(freq: 155.56, duration: 0.6, decay: 0.22, gain: 0.2, modIndex: 4.2)),
+]), "perfect")
+
+// Power-up: alien shimmer — inharmonic partials with a fast tremolo.
+func powerupSound() -> [Double] {
+    let n = Int(0.55 * sampleRate)
+    let partials: [(Double, Double)] = [(311, 0.34), (466, 0.24), (699, 0.18), (1047, 0.1)]
+    return (0..<n).map { i in
+        let t = Double(i) / sampleRate
+        let e = envelope(t, attack: 0.01, decay: 0.2)
+        let tremolo = 0.7 + 0.3 * sin(2 * .pi * 11 * t)
+        var s = 0.0
+        for (f, a) in partials { s += a * sin(2 * .pi * f * t + 0.8 * sin(2 * .pi * f * 2.02 * t)) }
+        return s * tremolo * e * 0.42
+    }
+}
+writeWav(powerupSound(), "powerup")
+
+// Shield: a deep hull hum — beating pair swelling in, slow release.
+func shieldSound() -> [Double] {
+    let n = Int(0.9 * sampleRate)
+    return (0..<n).map { i in
+        let t = Double(i) / sampleRate
+        let e = envelope(t, attack: 0.09, decay: 0.4)
+        var s = sin(2 * .pi * 82.5 * t) + 0.9 * sin(2 * .pi * 84.2 * t)
+        s += 0.35 * sin(2 * .pi * 165 * t)
+        return s * e * 0.24
+    }
+}
+writeWav(shieldSound(), "shield")
+
+// Sector crossing: an ominous riser — swept drone into a low metallic hit.
+func riserSound() -> [Double] {
+    let n = Int(0.85 * sampleRate)
+    var phase1 = 0.0, phase2 = 0.0
+    let noise = makeNoise(seed: 777)
     var lp = 0.0
     return (0..<n).map { i in
         let t = Double(i) / sampleRate
-        let freq = 130 * exp(-4 * t) + 45
+        let sweep = 70 + 220 * (t / 0.85) * (t / 0.85)
+        phase1 += 2 * .pi * sweep / sampleRate
+        phase2 += 2 * .pi * (sweep * 1.011) / sampleRate
+        lp += 0.05 * (noise() - lp)
+        let swell = min(t / 0.6, 1.0)
+        let tail = t > 0.7 ? exp(-(t - 0.7) / 0.1) : 1.0
+        return ((sin(phase1) + sin(phase2)) * 0.24 + lp * 1.6 * swell) * swell * tail * 0.5
+    }
+}
+writeWav(mix([
+    (0, riserSound()),
+    (0.72, darkTone(freq: 92.5, duration: 0.6, decay: 0.22, gain: 0.4, modIndex: 4.5)),
+]), "levelup")
+
+// Death: heavier — sub pitch-drop, gritty noise, soft-clipped for menace.
+func deathSound() -> [Double] {
+    let n = Int(0.95 * sampleRate)
+    var phase = 0.0
+    let noise = makeNoise(seed: 12345)
+    var lp = 0.0
+    return (0..<n).map { i in
+        let t = Double(i) / sampleRate
+        let freq = 95 * exp(-3.4 * t) + 28
         phase += 2 * .pi * freq / sampleRate
-        lp += 0.08 * (noise() - lp)
-        let e = envelope(t, attack: 0.002, decay: 0.22)
-        return (sin(phase) * 0.8 + lp * 2.2 * exp(-8 * t)) * e * 0.5
+        lp += 0.07 * (noise() - lp)
+        let e = envelope(t, attack: 0.002, decay: 0.3)
+        let raw = sin(phase) * 1.1 + lp * 3.0 * exp(-6 * t)
+        return tanh(raw * 1.6) * e * 0.52
     }
 }
 writeWav(deathSound(), "death")
 
-// Launch: short airy swoosh (differentiated noise so it reads as high, not hissy).
+// Launch: a dark thruster — low rumble under an airy swoosh.
 func launchSound() -> [Double] {
-    let n = Int(0.22 * sampleRate)
-    var state: UInt64 = 999
-    func noise() -> Double {
-        state = state &* 6364136223846793005 &+ 1442695040888963407
-        return Double(state >> 11) / Double(UInt64(1) << 53) * 2 - 1
-    }
+    let n = Int(0.28 * sampleRate)
+    let noise = makeNoise(seed: 999)
     var prev = 0.0
+    var lp = 0.0
     return (0..<n).map { i in
         let t = Double(i) / sampleRate
-        let e = envelope(t, attack: 0.04, decay: 0.07)
+        let e = envelope(t, attack: 0.04, decay: 0.09)
         let raw = noise()
         let hp = raw - prev
         prev = raw
-        return hp * e * 0.22
+        lp += 0.04 * (raw - lp)
+        return (hp * 0.16 + lp * 1.4 * exp(-5 * t) + 0.2 * sin(2 * .pi * 78 * t) * e) * e
     }
 }
 writeWav(launchSound(), "launch")
 
-// Ambient pad: 12s seamless loop. Every frequency (and LFO rate) is k/12 Hz,
-// so the waveform is exactly periodic over the file length.
+// Bouncer: a metallic clang — high-ratio FM, fast decay.
+writeWav(darkTone(freq: 196, duration: 0.3, decay: 0.1, gain: 0.4,
+                  modRatio: 3.76, modIndex: 6.5, sub: 0.3), "bounce")
+
+// Streak: an eerie beating riser — the hot-combo PERFECT voice.
+func streakSound() -> [Double] {
+    let n = Int(0.45 * sampleRate)
+    var phase1 = 0.0, phase2 = 0.0
+    return (0..<n).map { i in
+        let t = Double(i) / sampleRate
+        let sweep = 220 + 340 * (t / 0.45)
+        phase1 += 2 * .pi * sweep / sampleRate
+        phase2 += 2 * .pi * (sweep * 1.007 + 1.8) / sampleRate
+        let e = envelope(t, attack: 0.012, decay: 0.16)
+        return (sin(phase1) + sin(phase2) + 0.3 * sin(phase1 * 2)) * e * 0.24
+    }
+}
+writeWav(streakSound(), "streak")
+
+// Ambient pad: 12 s seamless loop of slow dread — a minor-second beat over the
+// root, a tritone drifting through, everything at k/12 Hz so the loop is exact.
 func padSound() -> [Double] {
     let duration = 12.0
     let n = Int(duration * sampleRate)
+    // 55 = 660/12 · 58.33 = 700/12 (minor 2nd beat) · 77.75 = 933/12 (tritone)
     let voices: [(freq: Double, amp: Double)] = [
-        (55, 0.5), (55 + 1.0 / 12.0, 0.35),
-        (82.5, 0.35), (82.5 + 1.0 / 12.0, 0.24),
-        (110, 0.3), (110 + 1.0 / 12.0, 0.2),
-        (165, 0.18), (165 + 1.0 / 12.0, 0.12),
+        (55, 0.5), (55 + 1.0 / 12.0, 0.3),
+        (58.0 + 4.0 / 12.0, 0.3),
+        (77.75, 0.26), (77.75 + 1.0 / 12.0, 0.16),
+        (110, 0.22), (165, 0.1),
     ]
     return (0..<n).map { i in
         let t = Double(i) / sampleRate
         var s = 0.0
         for (j, voice) in voices.enumerated() {
-            let lfo = 0.75 + 0.25 * sin(2 * .pi * (Double(j % 4 + 1) / 12.0) * t + Double(j))
+            let lfo = 0.7 + 0.3 * sin(2 * .pi * (Double(j % 4 + 1) / 12.0) * t + Double(j) * 1.3)
             s += voice.amp * lfo * sin(2 * .pi * voice.freq * t)
         }
-        return s * 0.15
+        // A slow sub pulse (2 cycles over the loop) breathing underneath.
+        s += 0.12 * sin(2 * .pi * (2.0 / 12.0) * t) * sin(2 * .pi * 41.25 * t)
+        return s * 0.14
     }
 }
 writeWav(padSound(), "ambient")

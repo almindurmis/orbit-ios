@@ -88,6 +88,10 @@ The galaxy just got dangerous — and a lot more beautiful.
 • DAILY MISSIONS — three fresh goals every day, each paying pilot XP
 • New pilot hub menu and a full run-summary screen with your distance to
   your best, longest streak, and mission rewards
+• THE HANGAR — tap your pilot card to customize your orbiter: 6 ship looks
+  and 7 trail colors, unlocked as your pilot level climbs
+• A darker, deep-space soundtrack — metallic tones, sub-bass swells and an
+  ominous ambient drone (the piano lesson is over)
 ```
 
 ## What's New (v1.0.1)
