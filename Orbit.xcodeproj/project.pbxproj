@@ -16,7 +16,9 @@
 		2B1DB9BE0B747B9B4B79BC41 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 658AB1A265E4192DEEE80377 /* Theme.swift */; };
 		2C4C96041E03CA9A9CE80505 /* Daily.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C7EF320A59D6432F21EAC09 /* Daily.swift */; };
 		2F169B27AC1ECA61187A4C2C /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = 5F5A79B22FBE0A0D16DAA8E0 /* GoogleMobileAds */; };
+		30AC9B6071E8B9A91447B40B /* Sector.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCC5FD43499AB517B071FA2A /* Sector.swift */; };
 		33335E4F882F977DFA66C647 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 20936134E6681D18358932B7 /* Assets.xcassets */; };
+		363B344DF9B1353AF5137810 /* Missions.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC01B0BFF83DCC9EA2135D67 /* Missions.swift */; };
 		3ACA0F75392D4CDF1F468747 /* plink6.wav in Resources */ = {isa = PBXBuildFile; fileRef = CC9EA722FD7733771F833C1A /* plink6.wav */; };
 		44DAC86547C43CC420C624C8 /* perfect.wav in Resources */ = {isa = PBXBuildFile; fileRef = FF1F79D97196EB2FBB4D8EA2 /* perfect.wav */; };
 		4819E8B92834E93C830E4D5E /* plink0.wav in Resources */ = {isa = PBXBuildFile; fileRef = 5A1386EF2D9D52A6B6D00CBF /* plink0.wav */; };
@@ -31,6 +33,7 @@
 		744054AF1D3673B5F920ADDE /* Palette.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA721E1DEA08394103F9EC01 /* Palette.swift */; };
 		7A7AF491520245E930D26EC8 /* AdsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3B36B68AB07134D4AE32D17 /* AdsManager.swift */; };
 		7F97DCFC97CD097DFF1EE7EE /* Avatars.swift in Sources */ = {isa = PBXBuildFile; fileRef = 546E01125E1C36E7FE11D171 /* Avatars.swift */; };
+		855CB18CE3DB7211211B3ED5 /* Obstacles.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23B40AD472B1276B6029CAB1 /* Obstacles.swift */; };
 		873A3B554C2E9B9F43ACDAE0 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = B315501990CE1ADD4B3352E9 /* FirebaseFirestore */; };
 		969E81B209C8C9D89485E13F /* levelup.wav in Resources */ = {isa = PBXBuildFile; fileRef = 9671659809071342C599CD39 /* levelup.wav */; };
 		A2620743BA4F68E525A5DE2E /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24F25630AF1FA533A535F9B3 /* ProfileView.swift */; };
@@ -43,6 +46,7 @@
 		CF8B79AE0EA02BA70923A9BF /* Textures.swift in Sources */ = {isa = PBXBuildFile; fileRef = C84E379A2BDA313B55B0CE5D /* Textures.swift */; };
 		DC40B5D1C55CF144DCABE2A4 /* Progress.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FB7947DFD8870EEAEC052DA /* Progress.swift */; };
 		DDFEA1FC93DC36D8EAA1FAD2 /* plink7.wav in Resources */ = {isa = PBXBuildFile; fileRef = 7F274C13CD5BF8D6BB1EF7E9 /* plink7.wav */; };
+		E2B0BAC65581631002CD2394 /* bounce.wav in Resources */ = {isa = PBXBuildFile; fileRef = E949F68773250E969308190D /* bounce.wav */; };
 		EC7B6005B5E370578ADAA661 /* plink5.wav in Resources */ = {isa = PBXBuildFile; fileRef = 6B2C427F7F106DD11E33ABB3 /* plink5.wav */; };
 		EE1FBD556760BA0D92BF15C1 /* GalaxyBackground.swift in Sources */ = {isa = PBXBuildFile; fileRef = E838416DC6D50437AB78C340 /* GalaxyBackground.swift */; };
 		F29DD4B6CDBAE928B5E5A0DD /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 090B092686913EE8BA69BE04 /* GoogleService-Info.plist */; };
@@ -50,6 +54,7 @@
 		FAA0EC05D1B2858EA20BE4C8 /* powerup.wav in Resources */ = {isa = PBXBuildFile; fileRef = 87501F5C9E69467439A42A9A /* powerup.wav */; };
 		FBBEA8376456FD2C70B8CE58 /* LeaderboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1FC3DEC54929DFEE926E68C /* LeaderboardView.swift */; };
 		FE1F71420B0761A4E62AA824 /* OrbitApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26EB023126B42D85C78E726C /* OrbitApp.swift */; };
+		FF88691692DC2F97683A2DB5 /* streak.wav in Resources */ = {isa = PBXBuildFile; fileRef = B30C2E2325F2461858A13E2F /* streak.wav */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -66,6 +71,7 @@
 		090B092686913EE8BA69BE04 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		0C7EF320A59D6432F21EAC09 /* Daily.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Daily.swift; sourceTree = "<group>"; };
 		20936134E6681D18358932B7 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		23B40AD472B1276B6029CAB1 /* Obstacles.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Obstacles.swift; sourceTree = "<group>"; };
 		24F25630AF1FA533A535F9B3 /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
 		26EB023126B42D85C78E726C /* OrbitApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrbitApp.swift; sourceTree = "<group>"; };
 		287040B41BDC87807EE3C62B /* death.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = death.wav; sourceTree = "<group>"; };
@@ -95,15 +101,19 @@
 		992C49158BEDDD0A7F2B2BAC /* Haptics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Haptics.swift; sourceTree = "<group>"; };
 		9BA0D59F22C1D9A5F31D6811 /* launch.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = launch.wav; sourceTree = "<group>"; };
 		AA721E1DEA08394103F9EC01 /* Palette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Palette.swift; sourceTree = "<group>"; };
+		B30C2E2325F2461858A13E2F /* streak.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = streak.wav; sourceTree = "<group>"; };
 		B74C6BC763E00FD91024D63A /* OrbitUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = OrbitUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		C1FC3DEC54929DFEE926E68C /* LeaderboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LeaderboardView.swift; sourceTree = "<group>"; };
 		C810FC6015262733E48D950C /* plink3.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = plink3.wav; sourceTree = "<group>"; };
 		C84E379A2BDA313B55B0CE5D /* Textures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Textures.swift; sourceTree = "<group>"; };
+		CC01B0BFF83DCC9EA2135D67 /* Missions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Missions.swift; sourceTree = "<group>"; };
 		CC9EA722FD7733771F833C1A /* plink6.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = plink6.wav; sourceTree = "<group>"; };
 		CD186C90DA1E96032C34DDB2 /* ScreenshotTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenshotTests.swift; sourceTree = "<group>"; };
 		DAFC409A71F352A4869CC672 /* shield.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = shield.wav; sourceTree = "<group>"; };
+		DCC5FD43499AB517B071FA2A /* Sector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sector.swift; sourceTree = "<group>"; };
 		E691E1A576C579A627A7BDDF /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		E838416DC6D50437AB78C340 /* GalaxyBackground.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GalaxyBackground.swift; sourceTree = "<group>"; };
+		E949F68773250E969308190D /* bounce.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = bounce.wav; sourceTree = "<group>"; };
 		F3729685554D0260F957EFC8 /* SplashView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplashView.swift; sourceTree = "<group>"; };
 		F3B36B68AB07134D4AE32D17 /* AdsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdsManager.swift; sourceTree = "<group>"; };
 		FF1F79D97196EB2FBB4D8EA2 /* perfect.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = perfect.wav; sourceTree = "<group>"; };
@@ -132,9 +142,11 @@
 				090B092686913EE8BA69BE04 /* GoogleService-Info.plist */,
 				992C49158BEDDD0A7F2B2BAC /* Haptics.swift */,
 				E691E1A576C579A627A7BDDF /* Info.plist */,
+				23B40AD472B1276B6029CAB1 /* Obstacles.swift */,
 				26EB023126B42D85C78E726C /* OrbitApp.swift */,
 				AA721E1DEA08394103F9EC01 /* Palette.swift */,
 				657D4332596AD0D5A77DD287 /* Planet.swift */,
+				DCC5FD43499AB517B071FA2A /* Sector.swift */,
 				8DDF215E856597FB6E5DBD8C /* SeededRandom.swift */,
 				C84E379A2BDA313B55B0CE5D /* Textures.swift */,
 				D815CFAF7DC21058B9875359 /* Services */,
@@ -183,6 +195,7 @@
 				F3B36B68AB07134D4AE32D17 /* AdsManager.swift */,
 				5765FEAD505FD82E9E940A7C /* Backend.swift */,
 				564B70EE2EFBEE3B8FE53B9E /* DeviceID.swift */,
+				CC01B0BFF83DCC9EA2135D67 /* Missions.swift */,
 				44B3ADB210138ED871F44D45 /* Profile.swift */,
 				5FB7947DFD8870EEAEC052DA /* Progress.swift */,
 				8AC96482B75BD4EAD3637B61 /* Sound.swift */,
@@ -194,6 +207,7 @@
 			isa = PBXGroup;
 			children = (
 				78C37968CA01A96B41EEF1DC /* ambient.wav */,
+				E949F68773250E969308190D /* bounce.wav */,
 				287040B41BDC87807EE3C62B /* death.wav */,
 				9BA0D59F22C1D9A5F31D6811 /* launch.wav */,
 				9671659809071342C599CD39 /* levelup.wav */,
@@ -208,6 +222,7 @@
 				7F274C13CD5BF8D6BB1EF7E9 /* plink7.wav */,
 				87501F5C9E69467439A42A9A /* powerup.wav */,
 				DAFC409A71F352A4869CC672 /* shield.wav */,
+				B30C2E2325F2461858A13E2F /* streak.wav */,
 			);
 			path = Sounds;
 			sourceTree = "<group>";
@@ -312,6 +327,7 @@
 				33335E4F882F977DFA66C647 /* Assets.xcassets in Resources */,
 				F29DD4B6CDBAE928B5E5A0DD /* GoogleService-Info.plist in Resources */,
 				4DEE638CF57F2062D0013445 /* ambient.wav in Resources */,
+				E2B0BAC65581631002CD2394 /* bounce.wav in Resources */,
 				73258259020F7E41BB2C9210 /* death.wav in Resources */,
 				F4D0ED0F1EF60FCDB7649C8A /* launch.wav in Resources */,
 				969E81B209C8C9D89485E13F /* levelup.wav in Resources */,
@@ -326,6 +342,7 @@
 				DDFEA1FC93DC36D8EAA1FAD2 /* plink7.wav in Resources */,
 				FAA0EC05D1B2858EA20BE4C8 /* powerup.wav in Resources */,
 				AB54056C9C2D033C759BB41F /* shield.wav in Resources */,
+				FF88691692DC2F97683A2DB5 /* streak.wav in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -346,6 +363,8 @@
 				CB919734D7C43B4BDF57DF9B /* Geometry.swift in Sources */,
 				60CE2DB69005C8391C172D2D /* Haptics.swift in Sources */,
 				FBBEA8376456FD2C70B8CE58 /* LeaderboardView.swift in Sources */,
+				363B344DF9B1353AF5137810 /* Missions.swift in Sources */,
+				855CB18CE3DB7211211B3ED5 /* Obstacles.swift in Sources */,
 				58F7DB0E116BB7F27DFDEEF1 /* OnboardingView.swift in Sources */,
 				FE1F71420B0761A4E62AA824 /* OrbitApp.swift in Sources */,
 				744054AF1D3673B5F920ADDE /* Palette.swift in Sources */,
@@ -354,6 +373,7 @@
 				A2620743BA4F68E525A5DE2E /* ProfileView.swift in Sources */,
 				DC40B5D1C55CF144DCABE2A4 /* Progress.swift in Sources */,
 				0A3A5194C52C3E2C17FE770E /* RootView.swift in Sources */,
+				30AC9B6071E8B9A91447B40B /* Sector.swift in Sources */,
 				AEB3A6AF71A0B352A96F6330 /* SeededRandom.swift in Sources */,
 				1144578FB8CDF2EACAB5A2E4 /* Sound.swift in Sources */,
 				A710C12B1878926AA730946A /* SplashView.swift in Sources */,
@@ -387,14 +407,14 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = 8R2N7396XY;
 				INFOPLIST_FILE = Orbit/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.1;
+				MARKETING_VERSION = 1.1.0;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_BUNDLE_IDENTIFIER = online.foundry7.orbit;
 				SDKROOT = iphoneos;
@@ -465,14 +485,14 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = 8R2N7396XY;
 				INFOPLIST_FILE = Orbit/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.1;
+				MARKETING_VERSION = 1.1.0;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_BUNDLE_IDENTIFIER = online.foundry7.orbit;
 				SDKROOT = iphoneos;

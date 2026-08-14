@@ -7,13 +7,17 @@ enum Palette {
     static let shieldBlue = SKColor(red: 0.35, green: 0.78, blue: 1.0, alpha: 1)
     static let magnetViolet = SKColor(red: 0.72, green: 0.5, blue: 1.0, alpha: 1)
     static let unstableRed = SKColor(red: 1.0, green: 0.45, blue: 0.35, alpha: 1)
+    static let bouncerPink = SKColor(red: 1.0, green: 0.42, blue: 0.76, alpha: 1)
     static let textPrimary = SKColor.white
     static let textDim = SKColor(white: 1, alpha: 0.45)
 
-    // Neon hues cycled as the planet chain grows, so long runs drift through the spectrum.
-    private static let hues: [CGFloat] = [0.52, 0.58, 0.68, 0.78, 0.87, 0.94, 0.07, 0.36, 0.45]
+    // Planets stay inside their sector's hue family, drifting a little per planet
+    // so a chain reads varied but the sector still has one identity.
+    private static let hueDrifts: [CGFloat] = [0, 0.06, -0.06, 0.11, -0.11, 0.04]
 
-    static func planetColor(index: Int) -> SKColor {
-        SKColor(hue: hues[index % hues.count], saturation: 0.68, brightness: 1.0, alpha: 1)
+    static func planetColor(index: Int, sectorHue: CGFloat) -> SKColor {
+        var hue = (sectorHue + hueDrifts[index % hueDrifts.count]).truncatingRemainder(dividingBy: 1)
+        if hue < 0 { hue += 1 }
+        return SKColor(hue: hue, saturation: 0.68, brightness: 1.0, alpha: 1)
     }
 }

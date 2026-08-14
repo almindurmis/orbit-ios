@@ -87,6 +87,26 @@ writeWav(mix([
     (0.27, note(freq: 1046.5, duration: 0.7, decay: 0.26, gain: 0.32)),
 ]), "levelup")
 
+// Bouncer ricochet: springy pitch-rising chirp with a light vibrato.
+func bounceSound() -> [Double] {
+    let n = Int(0.22 * sampleRate)
+    var phase = 0.0
+    return (0..<n).map { i in
+        let t = Double(i) / sampleRate
+        let freq = 240 + 2400 * t + 18 * sin(2 * .pi * 38 * t)
+        phase += 2 * .pi * freq / sampleRate
+        let e = envelope(t, attack: 0.004, decay: 0.08)
+        return (sin(phase) + 0.22 * sin(2 * phase)) * e * 0.34
+    }
+}
+writeWav(bounceSound(), "bounce")
+
+// Streak: a PERFECT while the combo is hot — two fast bright notes, up a fifth.
+writeWav(mix([
+    (0, note(freq: 988, duration: 0.35, decay: 0.12, gain: 0.3)),
+    (0.05, note(freq: 1480, duration: 0.45, decay: 0.2, gain: 0.3)),
+]), "streak")
+
 // Death: pitch-dropping thump plus a low-passed noise burst.
 func deathSound() -> [Double] {
     let n = Int(0.7 * sampleRate)

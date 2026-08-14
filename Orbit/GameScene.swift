@@ -60,6 +60,25 @@ final class GameScene: SKScene {
 
     private var pilotLeveledUp = false
 
+    // Obstacles (nodes live as children of the planet they guard; these arrays
+    // are pruned when their planet is culled).
+    private var walls: [AsteroidWall] = []
+    private var bouncers: [Bouncer] = []
+    private var gates: [(planet: Planet, gate: RotatingGate)] = []
+    private var grazedThisFlight = false
+    private var lastBounce: (bouncer: Bouncer, time: TimeInterval)?
+
+    // PERFECT streak combo: consecutive dead-center captures multiply the base
+    // score (×2, ×3… capped ×5); one sloppy capture breaks it.
+    private var perfectStreak = 0
+    private var comboFlame: SKEmitterNode!
+    private var hitStopUntil: TimeInterval = 0
+    private var shakeAmp: CGFloat = 0
+
+    // Per-run stats fed into the daily missions at death.
+    private var stats = Missions.RunStats()
+    private var completedMissions: [Missions.Mission] = []
+
     private var lastUpdate: TimeInterval = 0
     private var gameOverReady = false
 
@@ -88,6 +107,32 @@ final class GameScene: SKScene {
     private var xpBarBg: SKShapeNode!
     private var xpBarFill: SKSpriteNode!
     private let overXPLabel = SKLabelNode(fontNamed: "HelveticaNeue-Medium")
+
+    // Combo + sector HUD
+    private let comboLabel = SKLabelNode(fontNamed: "HelveticaNeue-Bold")
+    private var sectorTint: SKSpriteNode!
+
+    // Menu hub cards
+    private var pilotCard: SKShapeNode!
+    private var pilotRing: SKShapeNode!
+    private var pilotRingArc = SKShapeNode()
+    private let pilotRingLevelLabel = SKLabelNode(fontNamed: "HelveticaNeue-Bold")
+    private let pilotXPTextLabel = SKLabelNode(fontNamed: "HelveticaNeue-Medium")
+    private let bestCaptionLabel = SKLabelNode(fontNamed: "HelveticaNeue-Medium")
+    private var missionsCard: SKShapeNode!
+    private let missionsTitleLabel = SKLabelNode(fontNamed: "HelveticaNeue-Medium")
+    private var missionRowTitles: [SKLabelNode] = []
+    private var missionRowStates: [SKLabelNode] = []
+    private let dailyCountdownLabel = SKLabelNode(fontNamed: "HelveticaNeue-Medium")
+
+    // Game-over summary card
+    private var overPanel: SKShapeNode!
+    private var bestBarBg: SKShapeNode!
+    private var bestBarFill: SKSpriteNode!
+    private let bestBarLabel = SKLabelNode(fontNamed: "HelveticaNeue-Medium")
+    private var overXPBarBg: SKShapeNode!
+    private var overXPBarFill: SKSpriteNode!
+    private var missionDoneLabels: [SKLabelNode] = []
 
     // MARK: - Setup
 
@@ -295,6 +340,24 @@ final class GameScene: SKScene {
         aim.alpha = 0.3
         player.addChild(aim)
 
+        // Burns while a PERFECT streak is hot — intensity and color climb with it.
+        comboFlame = SKEmitterNode()
+        comboFlame.particleTexture = Textures.softDot
+        comboFlame.particleBirthRate = 0
+        comboFlame.particleLifetime = 0.5
+        comboFlame.particleAlpha = 0.6
+        comboFlame.particleAlphaSpeed = -1.2
+        comboFlame.particleScale = 0.3
+        comboFlame.particleScaleSpeed = -0.4
+        comboFlame.particleSpeed = 30
+        comboFlame.emissionAngleRange = .pi * 2
+        comboFlame.particleBlendMode = .add
+        comboFlame.particleColor = Palette.gold
+        comboFlame.particleColorBlendFactor = 1
+        comboFlame.targetNode = self
+        comboFlame.zPosition = -1
+        player.addChild(comboFlame)
+
         player.zPosition = 10
         addChild(player)
     }
@@ -314,11 +377,28 @@ final class GameScene: SKScene {
         levelLabel.verticalAlignmentMode = .top
         cam.addChild(levelLabel)
 
+        comboLabel.fontSize = 15
+        comboLabel.fontColor = Palette.gold
+        comboLabel.verticalAlignmentMode = .top
+        comboLabel.isHidden = true
+        cam.addChild(comboLabel)
+
         dailyTag.fontSize = 14
         dailyTag.fontColor = Palette.gold
         dailyTag.verticalAlignmentMode = .top
         dailyTag.isHidden = true
         cam.addChild(dailyTag)
+
+        // A soft full-screen wash in the sector's hue — crossfades on sector change.
+        sectorTint = SKSpriteNode(texture: Textures.softDot)
+        sectorTint.size = CGSize(width: max(size.width, size.height) * 2.6,
+                                 height: max(size.width, size.height) * 2.6)
+        sectorTint.color = Sectors.sector(for: 1).color
+        sectorTint.colorBlendFactor = 1
+        sectorTint.alpha = 0.12
+        sectorTint.blendMode = .add
+        sectorTint.zPosition = -30
+        cam.addChild(sectorTint)
 
         menuLayer.zPosition = 100
         cam.addChild(menuLayer)
@@ -328,23 +408,101 @@ final class GameScene: SKScene {
         titleLabel.fontColor = Palette.textPrimary
         menuLayer.addChild(titleLabel)
 
-        menuBestLabel.fontSize = 15
-        menuBestLabel.fontColor = Palette.textDim
-        menuLayer.addChild(menuBestLabel)
+        // Pilot card: level ring (arc tinted with the trail color), XP bar, best score.
+        pilotCard = SKShapeNode(rectOf: CGSize(width: 300, height: 92), cornerRadius: 16)
+        pilotCard.fillColor = SKColor(red: 0.02, green: 0.03, blue: 0.09, alpha: 0.72)
+        pilotCard.strokeColor = Palette.cyan.withAlphaComponent(0.3)
+        pilotCard.lineWidth = 1
+        menuLayer.addChild(pilotCard)
 
-        menuPilotLabel.fontSize = 13
-        menuPilotLabel.fontColor = Palette.cyan
-        menuLayer.addChild(menuPilotLabel)
+        pilotRing = SKShapeNode(circleOfRadius: 26)
+        pilotRing.strokeColor = SKColor(white: 1, alpha: 0.12)
+        pilotRing.lineWidth = 4
+        pilotRing.fillColor = .clear
+        pilotRing.position = CGPoint(x: -108, y: 0)
+        pilotCard.addChild(pilotRing)
 
-        xpBarBg = SKShapeNode(rectOf: CGSize(width: 180, height: 5), cornerRadius: 2.5)
+        pilotRingArc.strokeColor = Palette.cyan
+        pilotRingArc.lineWidth = 4
+        pilotRingArc.lineCap = .round
+        pilotRingArc.fillColor = .clear
+        pilotRing.addChild(pilotRingArc)
+
+        pilotRingLevelLabel.fontSize = 20
+        pilotRingLevelLabel.fontColor = Palette.textPrimary
+        pilotRingLevelLabel.verticalAlignmentMode = .center
+        pilotRing.addChild(pilotRingLevelLabel)
+
+        menuPilotLabel.fontSize = 15
+        menuPilotLabel.fontColor = Palette.textPrimary
+        menuPilotLabel.horizontalAlignmentMode = .left
+        menuPilotLabel.verticalAlignmentMode = .center
+        menuPilotLabel.position = CGPoint(x: -70, y: 18)
+        pilotCard.addChild(menuPilotLabel)
+
+        pilotXPTextLabel.fontSize = 11
+        pilotXPTextLabel.fontColor = Palette.textDim
+        pilotXPTextLabel.horizontalAlignmentMode = .left
+        pilotXPTextLabel.verticalAlignmentMode = .center
+        pilotXPTextLabel.position = CGPoint(x: -70, y: -3)
+        pilotCard.addChild(pilotXPTextLabel)
+
+        xpBarBg = SKShapeNode(rectOf: CGSize(width: 130, height: 5), cornerRadius: 2.5)
         xpBarBg.fillColor = SKColor(white: 1, alpha: 0.12)
         xpBarBg.strokeColor = .clear
-        menuLayer.addChild(xpBarBg)
+        xpBarBg.position = CGPoint(x: -5, y: -22)
+        pilotCard.addChild(xpBarBg)
 
         xpBarFill = SKSpriteNode(color: Palette.cyan, size: CGSize(width: 0, height: 5))
         xpBarFill.anchorPoint = CGPoint(x: 0, y: 0.5)
-        xpBarFill.position = CGPoint(x: -90, y: 0)
+        xpBarFill.position = CGPoint(x: -65, y: 0)
         xpBarBg.addChild(xpBarFill)
+
+        bestCaptionLabel.text = "BEST"
+        bestCaptionLabel.fontSize = 10
+        bestCaptionLabel.fontColor = Palette.textDim
+        bestCaptionLabel.verticalAlignmentMode = .center
+        bestCaptionLabel.position = CGPoint(x: 108, y: 18)
+        pilotCard.addChild(bestCaptionLabel)
+
+        menuBestLabel.fontSize = 26
+        menuBestLabel.fontColor = Palette.textPrimary
+        menuBestLabel.verticalAlignmentMode = .center
+        menuBestLabel.position = CGPoint(x: 108, y: -8)
+        pilotCard.addChild(menuBestLabel)
+
+        // Daily missions card: three seeded goals, refreshed every midnight.
+        missionsCard = SKShapeNode(rectOf: CGSize(width: 300, height: 112), cornerRadius: 16)
+        missionsCard.fillColor = SKColor(red: 0.02, green: 0.03, blue: 0.09, alpha: 0.72)
+        missionsCard.strokeColor = Palette.gold.withAlphaComponent(0.25)
+        missionsCard.lineWidth = 1
+        menuLayer.addChild(missionsCard)
+
+        missionsTitleLabel.text = "DAILY MISSIONS"
+        missionsTitleLabel.fontSize = 12
+        missionsTitleLabel.fontColor = Palette.gold
+        missionsTitleLabel.verticalAlignmentMode = .center
+        missionsTitleLabel.position = CGPoint(x: 0, y: 38)
+        missionsCard.addChild(missionsTitleLabel)
+
+        for i in 0..<3 {
+            let y = CGFloat(12 - i * 22)
+            let title = SKLabelNode(fontNamed: "HelveticaNeue-Medium")
+            title.fontSize = 11.5
+            title.horizontalAlignmentMode = .left
+            title.verticalAlignmentMode = .center
+            title.position = CGPoint(x: -132, y: y)
+            missionsCard.addChild(title)
+            missionRowTitles.append(title)
+
+            let state = SKLabelNode(fontNamed: "HelveticaNeue-Medium")
+            state.fontSize = 11.5
+            state.horizontalAlignmentMode = .right
+            state.verticalAlignmentMode = .center
+            state.position = CGPoint(x: 132, y: y)
+            missionsCard.addChild(state)
+            missionRowStates.append(state)
+        }
 
         menuTapLabel.text = "TAP TO PLAY"
         menuTapLabel.fontSize = 18
@@ -352,8 +510,8 @@ final class GameScene: SKScene {
         menuTapLabel.run(pulseForever())
         menuLayer.addChild(menuTapLabel)
 
-        dailyButton = SKShapeNode(rectOf: CGSize(width: 268, height: 58), cornerRadius: 14)
-        dailyButton.fillColor = SKColor(white: 1, alpha: 0.05)
+        dailyButton = SKShapeNode(rectOf: CGSize(width: 300, height: 74), cornerRadius: 16)
+        dailyButton.fillColor = SKColor(red: 0.02, green: 0.03, blue: 0.09, alpha: 0.72)
         dailyButton.strokeColor = Palette.gold.withAlphaComponent(0.65)
         dailyButton.lineWidth = 1.5
         menuLayer.addChild(dailyButton)
@@ -362,14 +520,20 @@ final class GameScene: SKScene {
         dailyTitleLabel.fontSize = 16
         dailyTitleLabel.fontColor = Palette.gold
         dailyTitleLabel.verticalAlignmentMode = .center
-        dailyTitleLabel.position = CGPoint(x: 0, y: 10)
+        dailyTitleLabel.position = CGPoint(x: 0, y: 20)
         dailyButton.addChild(dailyTitleLabel)
 
         dailySubLabel.fontSize = 11
         dailySubLabel.fontColor = Palette.textDim
         dailySubLabel.verticalAlignmentMode = .center
-        dailySubLabel.position = CGPoint(x: 0, y: -12)
+        dailySubLabel.position = CGPoint(x: 0, y: 0)
         dailyButton.addChild(dailySubLabel)
+
+        dailyCountdownLabel.fontSize = 10
+        dailyCountdownLabel.fontColor = SKColor(white: 1, alpha: 0.3)
+        dailyCountdownLabel.verticalAlignmentMode = .center
+        dailyCountdownLabel.position = CGPoint(x: 0, y: -20)
+        dailyButton.addChild(dailyCountdownLabel)
 
         gameOverLayer.zPosition = 100
         gameOverLayer.isHidden = true
@@ -377,27 +541,82 @@ final class GameScene: SKScene {
 
         gameOverLayer.addChild(dimNode)
 
-        overCaptionLabel.text = "SCORE"
-        overCaptionLabel.fontSize = 16
-        overCaptionLabel.fontColor = Palette.textDim
-        gameOverLayer.addChild(overCaptionLabel)
+        // Run summary card: score, distance-to-best bar, streak, XP, missions.
+        overPanel = SKShapeNode(rectOf: CGSize(width: 320, height: 340), cornerRadius: 20)
+        overPanel.fillColor = SKColor(red: 0.02, green: 0.03, blue: 0.09, alpha: 0.8)
+        overPanel.strokeColor = SKColor(white: 1, alpha: 0.14)
+        overPanel.lineWidth = 1
+        gameOverLayer.addChild(overPanel)
 
-        finalScoreLabel.fontSize = 96
+        overCaptionLabel.text = "SCORE"
+        overCaptionLabel.fontSize = 14
+        overCaptionLabel.fontColor = Palette.textDim
+        overCaptionLabel.verticalAlignmentMode = .center
+        overCaptionLabel.position = CGPoint(x: 0, y: 140)
+        overPanel.addChild(overCaptionLabel)
+
+        finalScoreLabel.fontSize = 68
         finalScoreLabel.fontColor = Palette.textPrimary
         finalScoreLabel.verticalAlignmentMode = .center
-        gameOverLayer.addChild(finalScoreLabel)
+        finalScoreLabel.position = CGPoint(x: 0, y: 92)
+        overPanel.addChild(finalScoreLabel)
 
+        bestBarLabel.fontSize = 12
+        bestBarLabel.fontColor = Palette.textDim
+        bestBarLabel.verticalAlignmentMode = .center
+        bestBarLabel.position = CGPoint(x: 0, y: 44)
+        overPanel.addChild(bestBarLabel)
+
+        bestBarBg = SKShapeNode(rectOf: CGSize(width: 220, height: 8), cornerRadius: 4)
+        bestBarBg.fillColor = SKColor(white: 1, alpha: 0.1)
+        bestBarBg.strokeColor = .clear
+        bestBarBg.position = CGPoint(x: 0, y: 26)
+        overPanel.addChild(bestBarBg)
+
+        bestBarFill = SKSpriteNode(color: Palette.gold, size: CGSize(width: 0, height: 8))
+        bestBarFill.anchorPoint = CGPoint(x: 0, y: 0.5)
+        bestBarFill.position = CGPoint(x: -110, y: 0)
+        bestBarBg.addChild(bestBarFill)
+
+        overStreakLabel.fontSize = 13
+        overStreakLabel.fontColor = Palette.gold
+        overStreakLabel.verticalAlignmentMode = .center
+        overStreakLabel.position = CGPoint(x: 0, y: 0)
+        overPanel.addChild(overStreakLabel)
+
+        overXPLabel.fontSize = 13
+        overXPLabel.fontColor = Palette.cyan
+        overXPLabel.verticalAlignmentMode = .center
+        overXPLabel.position = CGPoint(x: 0, y: -26)
+        overPanel.addChild(overXPLabel)
+
+        overXPBarBg = SKShapeNode(rectOf: CGSize(width: 220, height: 6), cornerRadius: 3)
+        overXPBarBg.fillColor = SKColor(white: 1, alpha: 0.1)
+        overXPBarBg.strokeColor = .clear
+        overXPBarBg.position = CGPoint(x: 0, y: -46)
+        overPanel.addChild(overXPBarBg)
+
+        overXPBarFill = SKSpriteNode(color: Palette.cyan, size: CGSize(width: 0, height: 6))
+        overXPBarFill.anchorPoint = CGPoint(x: 0, y: 0.5)
+        overXPBarFill.position = CGPoint(x: -110, y: 0)
+        overXPBarBg.addChild(overXPBarFill)
+
+        for i in 0..<3 {
+            let label = SKLabelNode(fontNamed: "HelveticaNeue-Medium")
+            label.fontSize = 11.5
+            label.fontColor = Palette.gold
+            label.verticalAlignmentMode = .center
+            label.position = CGPoint(x: 0, y: CGFloat(-76 - i * 21))
+            label.isHidden = true
+            overPanel.addChild(label)
+            missionDoneLabels.append(label)
+        }
+
+        // Kept for the pre-panel layout path; the panel's bar replaced it visually.
         finalBestLabel.fontSize = 17
         finalBestLabel.fontColor = Palette.textDim
+        finalBestLabel.isHidden = true
         gameOverLayer.addChild(finalBestLabel)
-
-        overStreakLabel.fontSize = 15
-        overStreakLabel.fontColor = Palette.gold
-        gameOverLayer.addChild(overStreakLabel)
-
-        overXPLabel.fontSize = 14
-        overXPLabel.fontColor = Palette.cyan
-        gameOverLayer.addChild(overXPLabel)
 
         overTapLabel.text = "TAP TO RETRY"
         overTapLabel.fontSize = 18
@@ -429,25 +648,23 @@ final class GameScene: SKScene {
 
     private func layoutHUD() {
         let h = size.height
+        sectorTint.size = CGSize(width: max(size.width, h) * 2.6,
+                                 height: max(size.width, h) * 2.6)
         scoreLabel.position = CGPoint(x: 0, y: h / 2 - 64)
         levelLabel.position = CGPoint(x: 0, y: h / 2 - 136)
-        dailyTag.position = CGPoint(x: 0, y: h / 2 - 158)
+        comboLabel.position = CGPoint(x: 0, y: h / 2 - 158)
+        dailyTag.position = CGPoint(x: 0, y: h / 2 - 182)
 
-        titleLabel.position = CGPoint(x: 0, y: h * 0.24)
-        menuBestLabel.position = CGPoint(x: 0, y: h * 0.24 - 44)
-        menuPilotLabel.position = CGPoint(x: 0, y: h * 0.24 - 76)
-        xpBarBg.position = CGPoint(x: 0, y: h * 0.24 - 92)
-        menuTapLabel.position = CGPoint(x: 0, y: -h * 0.24)
-        dailyButton.position = CGPoint(x: 0, y: -h * 0.35)
+        titleLabel.position = CGPoint(x: 0, y: h * 0.30)
+        pilotCard.position = CGPoint(x: 0, y: h * 0.30 - 100)
+        missionsCard.position = CGPoint(x: 0, y: h * 0.30 - 212)
+        menuTapLabel.position = CGPoint(x: 0, y: -h * 0.17)
+        dailyButton.position = CGPoint(x: 0, y: -h * 0.17 - 88)
 
         dimNode.size = CGSize(width: size.width, height: h)
-        overCaptionLabel.position = CGPoint(x: 0, y: 96)
-        finalScoreLabel.position = CGPoint(x: 0, y: 20)
-        finalBestLabel.position = CGPoint(x: 0, y: -56)
-        overStreakLabel.position = CGPoint(x: 0, y: -90)
-        overXPLabel.position = CGPoint(x: 0, y: -124)
-        overTapLabel.position = CGPoint(x: 0, y: -h * 0.26)
-        menuButton.position = CGPoint(x: 0, y: -h * 0.37)
+        overPanel.position = CGPoint(x: 0, y: h * 0.06)
+        overTapLabel.position = CGPoint(x: 0, y: -h * 0.28)
+        menuButton.position = CGPoint(x: 0, y: -h * 0.38)
     }
 
     override func didChangeSize(_ oldSize: CGSize) {
@@ -464,13 +681,28 @@ final class GameScene: SKScene {
 
         for planet in planets { planet.removeFromParent() }
         planets.removeAll()
+        walls.removeAll()
+        bouncers.removeAll()
+        gates.removeAll()
         planetCount = 0
         currentIndex = 0
         captured = 0
         lastLevel = 1
         score = 0
-        levelLabel.text = "LEVEL 1"
+        levelLabel.text = "SECTOR 1 · \(Sectors.sector(for: 1).name)"
         levelLabel.isHidden = showMenu
+        sectorTint.removeAllActions()
+        sectorTint.color = Sectors.sector(for: 1).color
+
+        perfectStreak = 0
+        comboLabel.isHidden = true
+        comboFlame.particleBirthRate = 0
+        hitStopUntil = 0
+        shakeAmp = 0
+        grazedThisFlight = false
+        lastBounce = nil
+        stats = Missions.RunStats()
+        completedMissions = []
 
         let first = makePlanet(ringRadius: 105, at: .zero)
         addChild(first)
@@ -505,29 +737,81 @@ final class GameScene: SKScene {
         dailyTag.isHidden = showMenu || mode == .classic
 
         if showMenu {
-            menuBestLabel.text = "BEST \(best)"
-            menuBestLabel.isHidden = best == 0
-            menuPilotLabel.text = "PILOT LV \(Progress.level)"
-            let fraction = CGFloat(Progress.xpIntoLevel) / CGFloat(max(1, Progress.xpForNextLevel))
-            xpBarFill.size.width = 180 * fraction
-            let streak = Daily.currentStreak
-            if streak > 0 {
-                let bestToday = Daily.bestToday
-                dailySubLabel.text = bestToday > 0
-                    ? "🔥 \(streak) DAY STREAK · BEST TODAY \(bestToday)"
-                    : "🔥 \(streak) DAY STREAK"
-            } else {
-                dailySubLabel.text = "SAME RUN FOR EVERYONE · START A STREAK"
-            }
+            refreshMenuHub()
+        } else {
+            removeAction(forKey: "menuTick")
         }
+    }
+
+    // MARK: - Menu hub
+
+    private func refreshMenuHub() {
+        menuBestLabel.text = "\(best)"
+        menuBestLabel.isHidden = best == 0
+        bestCaptionLabel.isHidden = best == 0
+        menuPilotLabel.text = "PILOT LV \(Progress.level)"
+        pilotXPTextLabel.text = "\(Progress.xpIntoLevel) / \(Progress.xpForNextLevel) XP"
+        pilotRingLevelLabel.text = "\(Progress.level)"
+
+        let fraction = CGFloat(Progress.xpIntoLevel) / CGFloat(max(1, Progress.xpForNextLevel))
+        xpBarFill.size.width = 130 * fraction
+
+        // Ring arc doubles as the trail-color preview.
+        let trail = Progress.trailColor
+        pilotRingArc.strokeColor = trail == .white ? Palette.cyan : trail
+        xpBarFill.color = pilotRingArc.strokeColor
+        if fraction > 0.01 {
+            let path = CGMutablePath()
+            path.addArc(center: .zero, radius: 26, startAngle: -.pi / 2,
+                        endAngle: -.pi / 2 + fraction * 2 * .pi, clockwise: false)
+            pilotRingArc.path = path
+        } else {
+            pilotRingArc.path = nil
+        }
+
+        let missions = Missions.today
+        for (i, mission) in missions.enumerated() where i < missionRowTitles.count {
+            let done = Missions.isComplete(mission)
+            missionRowTitles[i].text = mission.title
+            missionRowTitles[i].fontColor = done ? Palette.gold : SKColor(white: 1, alpha: 0.85)
+            missionRowStates[i].text = done ? "✓ +\(mission.xp) XP"
+                : "\(Missions.progress(mission))/\(mission.target)"
+            missionRowStates[i].fontColor = done ? Palette.gold : Palette.textDim
+        }
+
+        let streak = Daily.currentStreak
+        if streak > 0 {
+            let bestToday = Daily.bestToday
+            dailySubLabel.text = bestToday > 0
+                ? "🔥 \(streak) DAY STREAK · BEST TODAY \(bestToday)"
+                : "🔥 \(streak) DAY STREAK"
+        } else {
+            dailySubLabel.text = "SAME RUN FOR EVERYONE · START A STREAK"
+        }
+
+        dailyCountdownLabel.text = dailyCountdownText()
+        removeAction(forKey: "menuTick")
+        run(.repeatForever(.sequence([
+            .wait(forDuration: 1),
+            .run { [weak self] in self?.dailyCountdownLabel.text = self?.dailyCountdownText() },
+        ])), withKey: "menuTick")
+    }
+
+    private func dailyCountdownText() -> String {
+        let now = Date()
+        let start = Calendar.current.startOfDay(for: now)
+        guard let next = Calendar.current.date(byAdding: .day, value: 1, to: start) else { return "" }
+        let s = max(0, Int(next.timeIntervalSince(now)))
+        return String(format: "NEW RUN IN %02d:%02d:%02d", s / 3600, (s % 3600) / 60, s % 60)
     }
 
     private func makePlanet(ringRadius: CGFloat, at position: CGPoint,
                             kind: PlanetKind = .normal) -> Planet {
         let speed = min(baseOrbitSpeed + CGFloat(planetCount) * 0.045, maxOrbitSpeed)
+        let sector = Sectors.sector(for: level)
         let color: SKColor
         switch kind {
-        case .normal: color = Palette.planetColor(index: planetCount)
+        case .normal: color = Palette.planetColor(index: planetCount, sectorHue: sector.hue)
         case .golden: color = Palette.gold
         case .shield: color = Palette.shieldBlue
         case .magnet: color = Palette.magnetViolet
@@ -539,7 +823,7 @@ final class GameScene: SKScene {
                             color: color,
                             kind: kind)
         planet.position = position
-        planet.sprinkleStars()
+        planet.sprinkleStars(nebulaHue: sector.hue)
         planetCount += 1
         return planet
     }
@@ -576,6 +860,72 @@ final class GameScene: SKScene {
                                 kind: rollKind())
         addChild(planet)
         planets.append(planet)
+        spawnObstacles(from: last, to: planet)
+    }
+
+    // MARK: - Obstacles
+
+    // Seeded like everything else, so daily layouts match for everyone. Nodes are
+    // children of the guarded (target) planet and get culled with it.
+    private func spawnObstacles(from last: Planet, to planet: Planet) {
+        let forceShots = ProcessInfo.processInfo.arguments.contains("-screenshots")
+        let sector = Sectors.sector(for: level)
+        let toNew = planet.position - last.position
+        let dir = toNew.normalized
+        let perp = CGPoint(x: -dir.y, y: dir.x)
+
+        // Asteroid wall from sector 3: rocks jut in from one side of the corridor,
+        // always leaving the center line clear so a well-timed shot exists.
+        let wallChance: CGFloat = level >= 3 ? min(0.22 + CGFloat(level) * 0.03, 0.5) : 0
+        let wantWall = forceShots ? planetCount == 2 : rng.cgFloat(in: 0...1) < wallChance
+        if wantWall {
+            let t = rng.cgFloat(in: 0.42...0.6)
+            let side: CGFloat = rng.cgFloat(in: 0...1) < 0.5 ? 1 : -1
+            let clearance = rng.cgFloat(in: 42...64)
+            let count = 3 + Int(rng.next() % 3)
+            var rocks: [AsteroidWall.Rock] = []
+            for i in 0..<count {
+                let radius = rng.cgFloat(in: 13...19)
+                let along = clearance + CGFloat(i) * 34 + rng.cgFloat(in: -4...4)
+                rocks.append(AsteroidWall.Rock(offset: perp * (side * along), radius: radius))
+            }
+            let wall = AsteroidWall(rocks: rocks, hue: sector.hue)
+            wall.position = toNew * (t - 1)   // corridor point, in the new planet's frame
+            planet.addChild(wall)
+            walls.append(wall)
+        }
+
+        // Bouncer from sector 5: a springy orb beside the corridor.
+        let bouncerChance: CGFloat = level >= 5 ? 0.28 : 0
+        let wantBouncer = forceShots ? planetCount == 3 : rng.cgFloat(in: 0...1) < bouncerChance
+        if wantBouncer {
+            let t = rng.cgFloat(in: 0.35...0.65)
+            let side: CGFloat = rng.cgFloat(in: 0...1) < 0.5 ? 1 : -1
+            let lateral = rng.cgFloat(in: 55...105)
+            let bouncer = Bouncer()
+            bouncer.position = toNew * (t - 1) + perp * (side * lateral)
+            planet.addChild(bouncer)
+            bouncers.append(bouncer)
+        }
+
+        // Rotating gate from sector 8: an orbiting shield arc around the new planet.
+        let gateChance: CGFloat = level >= 8 ? 0.3 : 0
+        let wantGate = forceShots ? planetCount == 4 : rng.cgFloat(in: 0...1) < gateChance
+        if wantGate {
+            let spin: CGFloat = rng.cgFloat(in: 0...1) < 0.5 ? 1 : -1
+            let gate = RotatingGate(orbitRadius: planet.ringRadius + 34,
+                                    halfArc: rng.cgFloat(in: 0.55...0.8),
+                                    angularSpeed: spin * rng.cgFloat(in: 0.8...1.3),
+                                    color: sector.color)
+            planet.addChild(gate)
+            gates.append((planet, gate))
+        }
+    }
+
+    private func pruneCulledObstacles() {
+        walls.removeAll { $0.scene == nil }
+        bouncers.removeAll { $0.scene == nil }
+        gates.removeAll { $0.gate.scene == nil }
     }
 
     // MARK: - Game loop
@@ -583,6 +933,9 @@ final class GameScene: SKScene {
     override func update(_ currentTime: TimeInterval) {
         let dt: CGFloat = lastUpdate == 0 ? 1.0 / 60.0 : CGFloat(min(currentTime - lastUpdate, 1.0 / 30.0))
         lastUpdate = currentTime
+
+        // Hit-stop: a PERFECT freezes the world for a few frames — pure juice.
+        if currentTime < hitStopUntil { return }
 
         switch state {
         case .menu, .orbiting:
@@ -593,18 +946,7 @@ final class GameScene: SKScene {
             let tangent = tangentDirection()
             aim.zRotation = atan2(tangent.y, tangent.x)
         case .flying:
-            player.position = player.position + velocity * dt
-            let target = planets[currentIndex + 1]
-            // An active magnet widens the capture ring.
-            let captureRadius = target.ringRadius + (magnetRemaining > 0 ? magnetBonus : 0)
-            let d = player.position.distance(to: target.position)
-            if d <= captureRadius && prevTargetDistance > captureRadius {
-                capture(target)
-            } else if d > prevTargetDistance && d > captureRadius + missMargin {
-                if shieldHeld { shieldRescue() } else { die() }
-            } else {
-                prevTargetDistance = d
-            }
+            updateFlight(dt: dt, currentTime: currentTime)
         case .dead:
             break
         }
@@ -613,6 +955,83 @@ final class GameScene: SKScene {
         let k = 1 - exp(-5 * dt)
         cam.position = CGPoint(x: cam.position.x + (goal.x - cam.position.x) * k,
                                y: cam.position.y + (goal.y - cam.position.y) * k)
+
+        if shakeAmp > 0.5 {
+            cam.position = cam.position + CGPoint(x: CGFloat.random(in: -1...1) * shakeAmp,
+                                                  y: CGFloat.random(in: -1...1) * shakeAmp)
+            shakeAmp *= exp(-6 * dt)
+        } else {
+            shakeAmp = 0
+        }
+    }
+
+    private func updateFlight(dt: CGFloat, currentTime: TimeInterval) {
+        player.position = player.position + velocity * dt
+        let current = planets[currentIndex]
+        let target = planets[currentIndex + 1]
+
+        // Bouncers reflect the flight; the line is re-baselined so PERFECT and
+        // miss detection follow the new trajectory.
+        for bouncer in bouncers where bouncer.scene != nil {
+            let center = convert(CGPoint.zero, from: bouncer)
+            guard player.position.distance(to: center) <= Bouncer.radius + 7 else { continue }
+            if let recent = lastBounce, recent.bouncer === bouncer,
+               currentTime - recent.time < 0.3 { continue }
+            let n = (player.position - center).normalized
+            let dot = velocity.x * n.x + velocity.y * n.y
+            velocity = CGPoint(x: velocity.x - 2 * dot * n.x, y: velocity.y - 2 * dot * n.y)
+            launchOrigin = player.position
+            launchDir = velocity.normalized
+            prevTargetDistance = player.position.distance(to: target.position)
+            lastBounce = (bouncer, currentTime)
+            stats.bounces += 1
+            bouncer.squash()
+            Haptics.tap()
+            Sound.play("bounce")
+        }
+
+        // Asteroid walls: a hit ends the flight (Shield saves); a survived graze
+        // pays CLOSE CALL on the next capture.
+        for wall in walls where wall.scene != nil {
+            for rock in wall.rocks {
+                let center = convert(rock.offset, from: wall)
+                let d = player.position.distance(to: center)
+                if d <= rock.radius + 6 {
+                    crumble(at: player.position, hue: Sectors.sector(for: level).hue)
+                    shakeAmp = max(shakeAmp, 8)
+                    if shieldHeld { shieldRescue() } else { die() }
+                    return
+                } else if d <= rock.radius + 30 {
+                    grazedThisFlight = true
+                }
+            }
+        }
+
+        // Rotating gates on the planet being left AND the one being approached.
+        for planet in [current, target] {
+            guard let gate = gates.first(where: { $0.planet === planet })?.gate,
+                  gate.scene != nil else { continue }
+            let d = player.position.distance(to: planet.position)
+            guard abs(d - gate.orbitRadius) <= RotatingGate.bandHalfWidth else { continue }
+            let v = player.position - planet.position
+            if gate.isBlocking(angle: atan2(v.y, v.x)) {
+                gateSpark(at: player.position)
+                shakeAmp = max(shakeAmp, 8)
+                if shieldHeld { shieldRescue() } else { die() }
+                return
+            }
+        }
+
+        // An active magnet widens the capture ring.
+        let captureRadius = target.ringRadius + (magnetRemaining > 0 ? magnetBonus : 0)
+        let d = player.position.distance(to: target.position)
+        if d <= captureRadius && prevTargetDistance > captureRadius {
+            capture(target)
+        } else if d > prevTargetDistance && d > captureRadius + missMargin {
+            if shieldHeld { shieldRescue() } else { die() }
+        } else {
+            prevTargetDistance = d
+        }
     }
 
     private func camTarget() -> CGPoint {
@@ -642,6 +1061,8 @@ final class GameScene: SKScene {
         launchOrigin = player.position
         launchDir = dir
         prevTargetDistance = player.position.distance(to: planets[currentIndex + 1].position)
+        grazedThisFlight = false
+        lastBounce = nil
         trail.particleBirthRate = 150
         aim.isHidden = true
         state = .flying
@@ -699,9 +1120,25 @@ final class GameScene: SKScene {
         // The magnet that helped this capture is spent before a new one can arm.
         if magnetRemaining > 0 { magnetRemaining -= 1 }
 
-        var points = perfect ? 2 : 1
-        var text = perfect ? "PERFECT +2" : "+1"
-        var color = perfect ? Palette.gold : Palette.textDim
+        // Consecutive PERFECTs multiply the base score (×2, ×3… capped ×5).
+        var points: Int
+        var text: String
+        var color: SKColor
+        if perfect {
+            perfectStreak += 1
+            stats.perfects += 1
+            stats.longestStreak = max(stats.longestStreak, perfectStreak)
+            let multiplier = min(perfectStreak, 5)
+            points = 2 * multiplier
+            text = multiplier > 1 ? "PERFECT ×\(multiplier) +\(points)" : "PERFECT +2"
+            color = Palette.gold
+            hitStopUntil = lastUpdate + 0.07
+        } else {
+            perfectStreak = 0
+            points = 1
+            text = "+1"
+            color = Palette.textDim
+        }
         switch target.kind {
         case .normal:
             break
@@ -724,36 +1161,44 @@ final class GameScene: SKScene {
             color = Palette.unstableRed
         }
         score += points
-        popup(text: text, color: color, above: target)
+        popup(text: text, color: color, above: target, big: perfectStreak >= 3)
+
+        // A survived wall graze pays out on landing.
+        if grazedThisFlight {
+            grazedThisFlight = false
+            score += 2
+            stats.closeCalls += 1
+            let label = SKLabelNode(fontNamed: "HelveticaNeue-Medium")
+            label.text = "CLOSE CALL +2"
+            label.fontSize = 15
+            label.fontColor = Palette.bouncerPink
+            label.position = target.position + CGPoint(x: 0, y: -target.ringRadius - 26)
+            label.zPosition = 20
+            addChild(label)
+            label.run(.sequence([
+                .group([.moveBy(x: 0, y: -30, duration: 0.7),
+                        .sequence([.wait(forDuration: 0.4), .fadeOut(withDuration: 0.3)])]),
+                .removeFromParent(),
+            ]))
+        }
+
+        shockwave(at: target, perfect: perfect)
+        updateComboHUD()
 
         if target.kind != .normal {
             Sound.play("powerup")
         } else if perfect {
-            Sound.play("perfect")
+            Sound.play(perfectStreak >= 2 ? "streak" : "perfect")
         } else {
             Sound.plink(captured % 8)
         }
 
         captured += 1
+        stats.captures = captured
+        stats.maxLevel = max(stats.maxLevel, level)
         if level > lastLevel {
             lastLevel = level
-            levelLabel.text = "LEVEL \(level)"
-            let announce = SKLabelNode(fontNamed: "HelveticaNeue-Bold")
-            announce.text = "LEVEL \(level)"
-            announce.fontSize = 30
-            announce.fontColor = Palette.gold
-            announce.position = CGPoint(x: 0, y: size.height * 0.16)
-            announce.zPosition = 90
-            announce.alpha = 0
-            announce.setScale(0.7)
-            cam.addChild(announce)
-            announce.run(.sequence([
-                .group([.fadeIn(withDuration: 0.2), .scale(to: 1, duration: 0.25)]),
-                .wait(forDuration: 0.9),
-                .fadeOut(withDuration: 0.4),
-                .removeFromParent(),
-            ]))
-            Sound.play("levelup")
+            announceSector(Sectors.sector(for: level))
         }
 
         target.pulse()
@@ -767,13 +1212,135 @@ final class GameScene: SKScene {
         if planets.count > 5 {
             planets.removeFirst().removeFromParent()
             currentIndex -= 1
+            pruneCulledObstacles()
         }
     }
 
-    private func popup(text: String, color: SKColor, above planet: Planet) {
-        let label = SKLabelNode(fontNamed: "HelveticaNeue-Medium")
+    // Sector change: banner sweep + the background wash crossfades to the new hue.
+    private func announceSector(_ sector: Sector) {
+        levelLabel.text = "SECTOR \(sector.level) · \(sector.name)"
+        sectorTint.run(.colorize(with: sector.color, colorBlendFactor: 1, duration: 1.2))
+
+        let banner = SKNode()
+        banner.zPosition = 90
+        banner.position = CGPoint(x: 0, y: size.height * 0.16)
+        cam.addChild(banner)
+
+        let heading = SKLabelNode(fontNamed: "HelveticaNeue-Bold")
+        heading.text = "SECTOR \(sector.level)"
+        heading.fontSize = 32
+        heading.fontColor = sector.color
+        heading.verticalAlignmentMode = .center
+        banner.addChild(heading)
+
+        let name = SKLabelNode(fontNamed: "HelveticaNeue-Medium")
+        name.text = sector.name
+        name.fontSize = 15
+        name.fontColor = Palette.textDim
+        name.verticalAlignmentMode = .center
+        name.position = CGPoint(x: 0, y: -26)
+        banner.addChild(name)
+
+        for sign: CGFloat in [-1, 1] {
+            let line = SKSpriteNode(color: sector.color.withAlphaComponent(0.7),
+                                    size: CGSize(width: 54, height: 1.5))
+            line.position = CGPoint(x: sign * 128, y: 0)
+            banner.addChild(line)
+        }
+
+        banner.alpha = 0
+        banner.setScale(0.7)
+        banner.run(.sequence([
+            .group([.fadeIn(withDuration: 0.2), .scale(to: 1, duration: 0.25)]),
+            .wait(forDuration: 1.1),
+            .fadeOut(withDuration: 0.4),
+            .removeFromParent(),
+        ]))
+        Sound.play("levelup")
+    }
+
+    private func updateComboHUD() {
+        let hot = perfectStreak >= 2
+        comboLabel.isHidden = !hot
+        if hot {
+            comboLabel.text = "PERFECT STREAK ×\(min(perfectStreak, 5))"
+            comboLabel.fontColor = perfectStreak >= 4
+                ? SKColor(red: 1.0, green: 0.55, blue: 0.25, alpha: 1) : Palette.gold
+            comboLabel.removeAllActions()
+            comboLabel.setScale(1.25)
+            comboLabel.run(.scale(to: 1, duration: 0.18))
+        }
+        comboFlame.particleBirthRate = hot ? CGFloat(min(perfectStreak, 5)) * 14 : 0
+        comboFlame.particleColor = perfectStreak >= 4
+            ? SKColor(red: 1.0, green: 0.5, blue: 0.2, alpha: 1) : Palette.gold
+    }
+
+    // MARK: - Effects
+
+    private func shockwave(at planet: Planet, perfect: Bool) {
+        let ring = SKShapeNode(circleOfRadius: planet.ringRadius)
+        ring.strokeColor = perfect ? Palette.gold : SKColor(white: 1, alpha: 0.7)
+        ring.lineWidth = perfect ? 3 : 2
+        ring.glowWidth = perfect ? 5 : 3
+        ring.fillColor = .clear
+        ring.position = planet.position
+        ring.zPosition = 8
+        addChild(ring)
+        ring.run(.sequence([
+            .group([.scale(to: perfect ? 1.7 : 1.45, duration: 0.35),
+                    .fadeOut(withDuration: 0.35)]),
+            .removeFromParent(),
+        ]))
+    }
+
+    private func crumble(at point: CGPoint, hue: CGFloat) {
+        let burst = SKEmitterNode()
+        burst.particleTexture = Textures.softDot
+        burst.particleBirthRate = 700
+        burst.numParticlesToEmit = 26
+        burst.particleLifetime = 0.6
+        burst.particleSpeed = 140
+        burst.particleSpeedRange = 90
+        burst.emissionAngleRange = .pi * 2
+        burst.particleAlpha = 0.8
+        burst.particleAlphaSpeed = -1.4
+        burst.particleScale = 0.3
+        burst.particleScaleSpeed = -0.35
+        burst.particleColor = SKColor(hue: hue, saturation: 0.35, brightness: 0.85, alpha: 1)
+        burst.particleColorBlendFactor = 1
+        burst.particleBlendMode = .add
+        burst.position = point
+        burst.zPosition = 15
+        addChild(burst)
+        burst.run(.sequence([.wait(forDuration: 1.2), .removeFromParent()]))
+    }
+
+    private func gateSpark(at point: CGPoint) {
+        let burst = SKEmitterNode()
+        burst.particleTexture = Textures.softDot
+        burst.particleBirthRate = 900
+        burst.numParticlesToEmit = 20
+        burst.particleLifetime = 0.4
+        burst.particleSpeed = 200
+        burst.particleSpeedRange = 110
+        burst.emissionAngleRange = .pi * 2
+        burst.particleAlpha = 0.9
+        burst.particleAlphaSpeed = -2.2
+        burst.particleScale = 0.24
+        burst.particleScaleSpeed = -0.3
+        burst.particleColor = .white
+        burst.particleColorBlendFactor = 1
+        burst.particleBlendMode = .add
+        burst.position = point
+        burst.zPosition = 15
+        addChild(burst)
+        burst.run(.sequence([.wait(forDuration: 0.9), .removeFromParent()]))
+    }
+
+    private func popup(text: String, color: SKColor, above planet: Planet, big: Bool = false) {
+        let label = SKLabelNode(fontNamed: big ? "HelveticaNeue-Bold" : "HelveticaNeue-Medium")
         label.text = text
-        label.fontSize = 22
+        label.fontSize = big ? 27 : 22
         label.fontColor = color
         label.position = planet.position + CGPoint(x: 0, y: planet.ringRadius + 22)
         label.zPosition = 20
@@ -792,6 +1359,10 @@ final class GameScene: SKScene {
         player.alpha = 0
         shieldNode?.removeFromParent()
         shieldNode = nil
+        perfectStreak = 0
+        comboFlame.particleBirthRate = 0
+        comboLabel.isHidden = true
+        shakeAmp = max(shakeAmp, 15)
         Haptics.death()
         Sound.play("death")
 
@@ -823,7 +1394,11 @@ final class GameScene: SKScene {
             Daily.recordScore(score)
         }
         Backend.submitScore(score)
-        pilotLeveledUp = Progress.addXP(score)
+        stats.score = score
+        let scoreLeveledUp = Progress.addXP(score)
+        let missionResult = Missions.report(stats)
+        completedMissions = missionResult.completed
+        pilotLeveledUp = scoreLeveledUp || missionResult.leveledUp
 
         gameOverReady = false
         run(.sequence([.wait(forDuration: 0.55),
@@ -832,17 +1407,42 @@ final class GameScene: SKScene {
 
     private func showGameOver() {
         finalScoreLabel.text = "\(score)"
+        let reference: Int
         switch mode {
         case .classic:
             overCaptionLabel.text = "SCORE"
-            finalBestLabel.text = "BEST \(best)"
-            overStreakLabel.isHidden = true
+            reference = best
         case .daily:
-            overCaptionLabel.text = "DAILY CHALLENGE"
-            finalBestLabel.text = "BEST TODAY \(Daily.bestToday)"
-            overStreakLabel.text = "🔥 \(Daily.currentStreak) DAY STREAK"
-            overStreakLabel.isHidden = false
+            let streak = Daily.currentStreak
+            overCaptionLabel.text = streak > 0 ? "DAILY CHALLENGE · 🔥 \(streak)" : "DAILY CHALLENGE"
+            reference = Daily.bestToday
         }
+
+        // How close this run came to the record — full gold bar on a new best.
+        // Hidden entirely on a scoreless first run (no record to measure against).
+        let newBest = score > 0 && score >= reference
+        let ratio = reference > 0 ? min(CGFloat(score) / CGFloat(reference), 1) : 0
+        let showBar = reference > 0
+        bestBarLabel.isHidden = !showBar
+        bestBarBg.isHidden = !showBar
+        if newBest {
+            bestBarLabel.text = mode == .daily ? "BEST TODAY!" : "NEW BEST!"
+            bestBarLabel.fontColor = Palette.gold
+        } else {
+            bestBarLabel.text = "\(Int(ratio * 100))% OF BEST \(reference)"
+            bestBarLabel.fontColor = Palette.textDim
+        }
+        bestBarFill.size.width = 0
+        bestBarFill.color = newBest ? Palette.gold : Palette.cyan
+        bestBarFill.run(.resize(toWidth: 220 * max(ratio, 0.02), duration: 0.6))
+
+        if stats.longestStreak >= 2 {
+            overStreakLabel.text = "LONGEST PERFECT STREAK ×\(min(stats.longestStreak, 5))"
+            overStreakLabel.isHidden = false
+        } else {
+            overStreakLabel.isHidden = true
+        }
+
         if pilotLeveledUp {
             overXPLabel.text = Progress.unlockedNewTrail
                 ? "PILOT LV \(Progress.level) · NEW TRAIL COLOR"
@@ -854,11 +1454,31 @@ final class GameScene: SKScene {
             overXPLabel.fontColor = Palette.cyan
         }
         overXPLabel.isHidden = score == 0
+        let xpFraction = CGFloat(Progress.xpIntoLevel) / CGFloat(max(1, Progress.xpForNextLevel))
+        overXPBarFill.size.width = 0
+        overXPBarFill.run(.resize(toWidth: 220 * xpFraction, duration: 0.7))
+
+        for (i, label) in missionDoneLabels.enumerated() {
+            if i < completedMissions.count {
+                let mission = completedMissions[i]
+                label.text = "✓ \(mission.title)  +\(mission.xp) XP"
+                label.alpha = 0
+                label.isHidden = false
+                label.run(.sequence([.wait(forDuration: 0.35 + Double(i) * 0.2),
+                                     .fadeIn(withDuration: 0.3)]))
+            } else {
+                label.isHidden = true
+            }
+        }
+
         scoreLabel.isHidden = true
         levelLabel.isHidden = true
+        comboLabel.isHidden = true
         dailyTag.isHidden = true
         gameOverLayer.alpha = 0
         gameOverLayer.isHidden = false
+        overPanel.setScale(0.92)
+        overPanel.run(.scale(to: 1, duration: 0.25))
         gameOverLayer.run(.fadeIn(withDuration: 0.25))
         gameOverReady = true
         AdsManager.shared.gameEnded(score: score)
@@ -878,6 +1498,7 @@ final class GameScene: SKScene {
                 menuLayer.isHidden = true
                 scoreLabel.isHidden = false
                 levelLabel.isHidden = false
+                removeAction(forKey: "menuTick")
                 state = .orbiting
             }
             Haptics.tap()

@@ -14,7 +14,8 @@ enum Sound {
         host = node
         try? AVAudioSession.sharedInstance().setCategory(.ambient, options: [.mixWithOthers])
         try? AVAudioSession.sharedInstance().setActive(true)
-        let names = ["perfect", "powerup", "shield", "death", "levelup", "launch"]
+        let names = ["perfect", "powerup", "shield", "death", "levelup", "launch",
+                     "bounce", "streak"]
             + (0..<8).map { "plink\($0)" }
         for name in names where Bundle.main.url(forResource: name, withExtension: "wav") != nil {
             actions[name] = .playSoundFileNamed("\(name).wav", waitForCompletion: false)

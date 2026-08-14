@@ -73,6 +73,23 @@ planet,gravity,one tap,casual,offline,streak,galaxy,stars,hyper casual,reflex,ti
 
 (94 characters. Don't repeat words already in the name/subtitle — orbit, space, arcade, daily, leaderboard are indexed from there.)
 
+## What's New (v1.1.0)
+
+```
+The galaxy just got dangerous — and a lot more beautiful.
+
+• SECTORS — every level is now a named sector with its own colors and sky
+• ASTEROID WALLS — glowing rock barriers block parts of the corridor; graze
+  them for CLOSE CALL bonus points
+• BOUNCERS — springy orbs that ricochet your flight; bank shots are real
+• ROTATING GATES — orbiting shield arcs you must slip through
+• PERFECT STREAKS — consecutive dead-center captures multiply your score up
+  to ×5, with a flame trail that grows as your combo burns
+• DAILY MISSIONS — three fresh goals every day, each paying pilot XP
+• New pilot hub menu and a full run-summary screen with your distance to
+  your best, longest streak, and mission rewards
+```
+
 ## What's New (v1.0.1)
 
 ```
