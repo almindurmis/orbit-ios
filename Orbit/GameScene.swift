@@ -37,6 +37,8 @@ final class GameScene: SKScene {
     }
 
     private let player = SKNode()
+    private var playerHalo: SKSpriteNode!
+    private var playerCore: SKShapeNode!
     private var trail: SKEmitterNode!
     private var aim: SKSpriteNode!
 
@@ -309,16 +311,16 @@ final class GameScene: SKScene {
     }
 
     private func setupPlayer() {
-        let halo = SKSpriteNode(texture: Textures.softDot)
-        halo.size = CGSize(width: 44, height: 44)
-        halo.blendMode = .add
-        halo.alpha = 0.9
-        player.addChild(halo)
+        playerHalo = SKSpriteNode(texture: Textures.softDot)
+        playerHalo.size = CGSize(width: 44, height: 44)
+        playerHalo.blendMode = .add
+        playerHalo.alpha = 0.9
+        player.addChild(playerHalo)
 
-        let core = SKShapeNode(circleOfRadius: 6)
-        core.fillColor = .white
-        core.strokeColor = .clear
-        player.addChild(core)
+        playerCore = SKShapeNode(circleOfRadius: 6)
+        playerCore.fillColor = .white
+        playerCore.strokeColor = .clear
+        player.addChild(playerCore)
 
         trail = SKEmitterNode()
         trail.particleTexture = Textures.softDot
@@ -360,6 +362,55 @@ final class GameScene: SKScene {
 
         player.zPosition = 10
         addChild(player)
+        applyShipStyle()
+    }
+
+    // Restyles the orbiter to the Hangar pick — core shape/color, halo, motion.
+    private func applyShipStyle() {
+        let ship = Progress.selectedShip
+
+        playerHalo.color = ship.haloColor
+        playerHalo.colorBlendFactor = ship == .classic ? 0 : 1
+        switch ship {
+        case .comet: playerHalo.size = CGSize(width: 58, height: 58)
+        case .nova: playerHalo.size = CGSize(width: 52, height: 52)
+        default: playerHalo.size = CGSize(width: 44, height: 44)
+        }
+
+        playerCore.removeAction(forKey: "shipFX")
+        playerCore.setScale(1)
+        playerCore.zRotation = 0
+        if ship == .crystal {
+            let path = CGMutablePath()
+            path.move(to: CGPoint(x: 0, y: 8.5))
+            path.addLine(to: CGPoint(x: 6, y: 0))
+            path.addLine(to: CGPoint(x: 0, y: -8.5))
+            path.addLine(to: CGPoint(x: -6, y: 0))
+            path.closeSubpath()
+            playerCore.path = path
+            playerCore.run(.repeatForever(.rotate(byAngle: 2 * .pi, duration: 4)),
+                           withKey: "shipFX")
+        } else {
+            playerCore.path = CGPath(ellipseIn: CGRect(x: -6, y: -6, width: 12, height: 12),
+                                     transform: nil)
+        }
+        playerCore.fillColor = ship.coreColor
+        playerCore.strokeColor = ship == .void ? ship.haloColor : .clear
+        playerCore.lineWidth = ship == .void ? 1.8 : 0
+        playerCore.glowWidth = ship == .void ? 2.5 : 0
+        if ship == .nova {
+            playerCore.run(.repeatForever(.sequence([
+                .scale(to: 1.25, duration: 0.45),
+                .scale(to: 1.0, duration: 0.45),
+            ])), withKey: "shipFX")
+        }
+    }
+
+    // Called by RootView when the Hangar sheet closes — reflect new picks live.
+    func refreshAfterHangar() {
+        applyShipStyle()
+        trail.particleColor = Progress.trailColor
+        if state == .menu { refreshMenuHub() }
     }
 
     private func buildHUD() {
@@ -470,6 +521,14 @@ final class GameScene: SKScene {
         menuBestLabel.verticalAlignmentMode = .center
         menuBestLabel.position = CGPoint(x: 108, y: -8)
         pilotCard.addChild(menuBestLabel)
+
+        let hangarHint = SKLabelNode(fontNamed: "HelveticaNeue-Medium")
+        hangarHint.text = "TAP TO OPEN HANGAR"
+        hangarHint.fontSize = 8.5
+        hangarHint.fontColor = SKColor(white: 1, alpha: 0.3)
+        hangarHint.verticalAlignmentMode = .center
+        hangarHint.position = CGPoint(x: 0, y: -36)
+        pilotCard.addChild(hangarHint)
 
         // Daily missions card: three seeded goals, refreshed every midnight.
         missionsCard = SKShapeNode(rectOf: CGSize(width: 300, height: 112), cornerRadius: 16)
@@ -1444,9 +1503,13 @@ final class GameScene: SKScene {
         }
 
         if pilotLeveledUp {
-            overXPLabel.text = Progress.unlockedNewTrail
-                ? "PILOT LV \(Progress.level) · NEW TRAIL COLOR"
-                : "PILOT LEVEL UP · LV \(Progress.level)"
+            if Progress.unlockedNewShip {
+                overXPLabel.text = "PILOT LV \(Progress.level) · NEW SHIP IN HANGAR"
+            } else if Progress.unlockedNewTrail {
+                overXPLabel.text = "PILOT LV \(Progress.level) · NEW TRAIL COLOR"
+            } else {
+                overXPLabel.text = "PILOT LEVEL UP · LV \(Progress.level)"
+            }
             overXPLabel.fontColor = Palette.gold
             Sound.play("levelup")
         } else {
@@ -1491,6 +1554,11 @@ final class GameScene: SKScene {
         switch state {
         case .menu:
             let location = touch.location(in: menuLayer)
+            if pilotCard.calculateAccumulatedFrame().insetBy(dx: -6, dy: -6).contains(location) {
+                bridge?.openHangar = true
+                Haptics.tap()
+                return
+            }
             if dailyButton.calculateAccumulatedFrame().insetBy(dx: -18, dy: -14).contains(location) {
                 mode = .daily
                 startRun(showMenu: false)

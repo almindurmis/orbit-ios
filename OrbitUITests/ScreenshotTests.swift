@@ -25,6 +25,13 @@ final class ScreenshotTests: XCTestCase {
 
         snap("01-menu")
 
+        // Hangar: tap the pilot card (top card under the title).
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.31)).tap()
+        sleep(2)
+        snap("08-hangar")
+        app.swipeDown(velocity: .fast)
+        sleep(2)
+
         // Classic run: first tap starts, capture the orbiting dot, then a launch.
         let center = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
         center.tap()

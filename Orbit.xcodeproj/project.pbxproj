@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		0A3A5194C52C3E2C17FE770E /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3DBDD45DA7B7C19762768101 /* RootView.swift */; };
+		0D6B2EC181CFA9015B3073E0 /* HangarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB4AFDB02DE0E3ACD13C218E /* HangarView.swift */; };
 		1144578FB8CDF2EACAB5A2E4 /* Sound.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AC96482B75BD4EAD3637B61 /* Sound.swift */; };
 		15C7C3B412DD2A31F269D6AE /* Backend.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5765FEAD505FD82E9E940A7C /* Backend.swift */; };
 		17780B5C60FFE0F04772EBAE /* Planet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 657D4332596AD0D5A77DD287 /* Planet.swift */; };
@@ -103,6 +104,7 @@
 		AA721E1DEA08394103F9EC01 /* Palette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Palette.swift; sourceTree = "<group>"; };
 		B30C2E2325F2461858A13E2F /* streak.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = streak.wav; sourceTree = "<group>"; };
 		B74C6BC763E00FD91024D63A /* OrbitUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = OrbitUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		BB4AFDB02DE0E3ACD13C218E /* HangarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HangarView.swift; sourceTree = "<group>"; };
 		C1FC3DEC54929DFEE926E68C /* LeaderboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LeaderboardView.swift; sourceTree = "<group>"; };
 		C810FC6015262733E48D950C /* plink3.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = plink3.wav; sourceTree = "<group>"; };
 		C84E379A2BDA313B55B0CE5D /* Textures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Textures.swift; sourceTree = "<group>"; };
@@ -161,6 +163,7 @@
 			children = (
 				546E01125E1C36E7FE11D171 /* Avatars.swift */,
 				E838416DC6D50437AB78C340 /* GalaxyBackground.swift */,
+				BB4AFDB02DE0E3ACD13C218E /* HangarView.swift */,
 				C1FC3DEC54929DFEE926E68C /* LeaderboardView.swift */,
 				2A8AAE249E589964A5CA2A07 /* OnboardingView.swift */,
 				24F25630AF1FA533A535F9B3 /* ProfileView.swift */,
@@ -361,6 +364,7 @@
 				EE1FBD556760BA0D92BF15C1 /* GalaxyBackground.swift in Sources */,
 				4B6D7E3EB11F2E3927CAD4BE /* GameScene.swift in Sources */,
 				CB919734D7C43B4BDF57DF9B /* Geometry.swift in Sources */,
+				0D6B2EC181CFA9015B3073E0 /* HangarView.swift in Sources */,
 				60CE2DB69005C8391C172D2D /* Haptics.swift in Sources */,
 				FBBEA8376456FD2C70B8CE58 /* LeaderboardView.swift in Sources */,
 				363B344DF9B1353AF5137810 /* Missions.swift in Sources */,
@@ -407,7 +411,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_TEAM = 8R2N7396XY;
 				INFOPLIST_FILE = Orbit/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -485,7 +489,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_TEAM = 8R2N7396XY;
 				INFOPLIST_FILE = Orbit/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
