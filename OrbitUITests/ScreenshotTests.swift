@@ -66,6 +66,27 @@ final class ScreenshotTests: XCTestCase {
         snap("07-daily")
     }
 
+    // Drives ~30s of real gameplay for the App Store preview video recording.
+    // Run alone with -only-testing while `simctl io recordVideo` captures.
+    func testPreviewDrive() throws {
+        let app = launchFresh()
+        let nameField = app.textFields.firstMatch
+        if nameField.waitForExistence(timeout: 3) {
+            nameField.tap()
+            nameField.typeText("Nova")
+            app.buttons["START"].firstMatch.tap()
+            sleep(2)
+        }
+        sleep(2)
+        let center = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+        center.tap()   // menu → classic run
+        for _ in 0..<26 {
+            usleep(1_150_000)
+            center.tap()   // launches; on a death this same tap retries
+        }
+        sleep(2)
+    }
+
     private func launchFresh() -> XCUIApplication {
         let app = XCUIApplication()
         // The extra pairs pre-seed UserDefaults (argument domain) so the menu
