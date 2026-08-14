@@ -20,6 +20,25 @@ struct PremiumView: View {
         ("bolt", "Double mission XP"),
     ]
 
+    private var staged: Bool {
+        ProcessInfo.processInfo.arguments.contains("-fakestore")
+    }
+
+    private func stagedButton(_ title: String, _ price: String) -> some View {
+        VStack(spacing: 2) {
+            Text(title)
+                .font(.system(size: 15, weight: .bold))
+            Text(price)
+                .font(.system(size: 12, weight: .semibold))
+                .opacity(0.75)
+        }
+        .foregroundStyle(.black)
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 12)
+        .background(Theme.gold, in: Capsule())
+        .padding(.horizontal, 40)
+    }
+
     var body: some View {
         ZStack {
             GalaxyBackground()
@@ -54,7 +73,12 @@ struct PremiumView: View {
                 .padding(.horizontal, 24)
 
                 if !premium.isActive {
-                    if premium.products.isEmpty {
+                    if staged {
+                        // Screenshot staging (-fakestore): the exact purchase buttons with
+                        // the store's real US prices, for the review-information capture.
+                        stagedButton("ORBIT PREMIUM MONTHLY", "$4.99/month")
+                        stagedButton("ORBIT PREMIUM YEARLY", "$34.99/year")
+                    } else if premium.products.isEmpty {
                         Text("Subscriptions are loading…\nCheck your connection if this persists.")
                             .font(.system(size: 12))
                             .foregroundStyle(Theme.textDim)

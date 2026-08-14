@@ -22,6 +22,7 @@
 		363B344DF9B1353AF5137810 /* Missions.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC01B0BFF83DCC9EA2135D67 /* Missions.swift */; };
 		369CB886F2BAD5AB65BF451B /* Premium.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8365A0669BCED256F09DAAE7 /* Premium.swift */; };
 		3ACA0F75392D4CDF1F468747 /* plink6.wav in Resources */ = {isa = PBXBuildFile; fileRef = CC9EA722FD7733771F833C1A /* plink6.wav */; };
+		436F005B591A95D293F79A3A /* Products.storekit in Resources */ = {isa = PBXBuildFile; fileRef = 6C8606032F2F7812BA10A0AE /* Products.storekit */; };
 		44DAC86547C43CC420C624C8 /* perfect.wav in Resources */ = {isa = PBXBuildFile; fileRef = FF1F79D97196EB2FBB4D8EA2 /* perfect.wav */; };
 		4819E8B92834E93C830E4D5E /* plink0.wav in Resources */ = {isa = PBXBuildFile; fileRef = 5A1386EF2D9D52A6B6D00CBF /* plink0.wav */; };
 		4B6D7E3EB11F2E3927CAD4BE /* GameScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67704BCFB520BB5DBF3F2B55 /* GameScene.swift */; };
@@ -102,6 +103,7 @@
 		67704BCFB520BB5DBF3F2B55 /* GameScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameScene.swift; sourceTree = "<group>"; };
 		678E8D8AE6DDD6A7BFAE4BFE /* plink2.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = plink2.wav; sourceTree = "<group>"; };
 		6B2C427F7F106DD11E33ABB3 /* plink5.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = plink5.wav; sourceTree = "<group>"; };
+		6C8606032F2F7812BA10A0AE /* Products.storekit */ = {isa = PBXFileReference; path = Products.storekit; sourceTree = "<group>"; };
 		78C37968CA01A96B41EEF1DC /* ambient.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = ambient.wav; sourceTree = "<group>"; };
 		7942FC7F9D6A3CF40094A3EA /* PremiumView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PremiumView.swift; sourceTree = "<group>"; };
 		7F274C13CD5BF8D6BB1EF7E9 /* plink7.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = plink7.wav; sourceTree = "<group>"; };
@@ -163,6 +165,7 @@
 				26EB023126B42D85C78E726C /* OrbitApp.swift */,
 				AA721E1DEA08394103F9EC01 /* Palette.swift */,
 				657D4332596AD0D5A77DD287 /* Planet.swift */,
+				6C8606032F2F7812BA10A0AE /* Products.storekit */,
 				DCC5FD43499AB517B071FA2A /* Sector.swift */,
 				8DDF215E856597FB6E5DBD8C /* SeededRandom.swift */,
 				C84E379A2BDA313B55B0CE5D /* Textures.swift */,
@@ -350,6 +353,7 @@
 			files = (
 				33335E4F882F977DFA66C647 /* Assets.xcassets in Resources */,
 				F29DD4B6CDBAE928B5E5A0DD /* GoogleService-Info.plist in Resources */,
+				436F005B591A95D293F79A3A /* Products.storekit in Resources */,
 				4DEE638CF57F2062D0013445 /* ambient.wav in Resources */,
 				E2B0BAC65581631002CD2394 /* bounce.wav in Resources */,
 				73258259020F7E41BB2C9210 /* death.wav in Resources */,
