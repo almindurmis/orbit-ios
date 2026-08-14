@@ -70,6 +70,24 @@ enum Progress {
         trailTiers.contains(where: { $0.level == level })
     }
 
+    // Premium-only animated trails, encoded as negative trail choices.
+    enum PremiumTrail: Int, CaseIterable {
+        case prism = -1
+        case embers = -2
+
+        var displayName: String {
+            switch self {
+            case .prism: return "PRISM"
+            case .embers: return "EMBERS"
+            }
+        }
+    }
+
+    static var premiumTrail: PremiumTrail? {
+        guard Premium.isActiveNow else { return nil }
+        return PremiumTrail(rawValue: selectedTrailLevel)
+    }
+
     static var selectedShip: ShipStyle {
         get {
             guard let raw = UserDefaults.standard.string(forKey: shipChoiceKey),

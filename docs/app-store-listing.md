@@ -92,6 +92,17 @@ The galaxy just got dangerous — and a lot more beautiful.
   and 7 trail colors, unlocked as your pilot level climbs
 • A darker, deep-space soundtrack — metallic tones, sub-bass swells and an
   ominous ambient drone (the piano lesson is over)
+• GHOST RACING — the daily challenge now replays your best run and today's
+  top pilots as live ghosts flying beside you
+• WEEKLY GAUNTLET — a brutal seeded run with hazards from the first corridor
+  and its own leaderboard
+• GUARDIANS — every 10th sector is defended by a giant planet behind twin
+  rotating gates; bring it down for a heavy bonus
+• DAILY TWISTS — some days the whole world mutates: tiny rings, hyper orbits
+• RUN LAB — fly a friend's seed code: same planets, same walls, best score wins
+• ORBIT PREMIUM — ad-free, one revive per run, Zen Drift, create your own
+  challenge codes, full pilot stats, animated PRISM & EMBERS trails, a gold
+  star on the leaderboard and double mission XP
 ```
 
 ## What's New (v1.0.1)

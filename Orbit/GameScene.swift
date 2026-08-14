@@ -4,7 +4,7 @@ import UIKit
 final class GameScene: SKScene {
 
     private enum State { case menu, orbiting, flying, dead }
-    private enum Mode { case classic, daily }
+    private enum Mode { case classic, daily, gauntlet, zen, custom }
 
     // Tuning
     private let launchSpeed: CGFloat = 640
@@ -81,6 +81,22 @@ final class GameScene: SKScene {
     private var stats = Missions.RunStats()
     private var completedMissions: [Missions.Mission] = []
 
+    // Ghost racing (daily runs): record our positions, replay opponents'.
+    private var runClock: Double = 0
+    private var ghostSampleAccumulator: Double = 0
+    private var ghostSamples: [Double] = []
+    private var activeGhosts: [GhostNode] = []
+    private var runToken = 0
+
+    // Modes + premium
+    private var customSeed: UInt64 = 0
+    private var lastGuardianSector = 0
+    private var revivedThisRun = false
+    private var xpAwardedThisRun = 0
+    private var reportedBounces = 0
+    private var reportedCloseCalls = 0
+    private var pendingDeathCause = "drift"
+
     private var lastUpdate: TimeInterval = 0
     private var gameOverReady = false
 
@@ -126,6 +142,13 @@ final class GameScene: SKScene {
     private var missionRowTitles: [SKLabelNode] = []
     private var missionRowStates: [SKLabelNode] = []
     private let dailyCountdownLabel = SKLabelNode(fontNamed: "HelveticaNeue-Medium")
+
+    // Mode entry points on the menu + zen exit + revive
+    private var gauntletButton: SKShapeNode!
+    private var zenButton: SKShapeNode!
+    private var runLabButton: SKShapeNode!
+    private var zenExitButton: SKShapeNode!
+    private var reviveButton: SKShapeNode!
 
     // Game-over summary card
     private var overPanel: SKShapeNode!
@@ -409,7 +432,7 @@ final class GameScene: SKScene {
     // Called by RootView when the Hangar sheet closes — reflect new picks live.
     func refreshAfterHangar() {
         applyShipStyle()
-        trail.particleColor = Progress.trailColor
+        applyTrailStyle()
         if state == .menu { refreshMenuHub() }
     }
 
@@ -594,6 +617,48 @@ final class GameScene: SKScene {
         dailyCountdownLabel.position = CGPoint(x: 0, y: -20)
         dailyButton.addChild(dailyCountdownLabel)
 
+        gauntletButton = SKShapeNode(rectOf: CGSize(width: 300, height: 46), cornerRadius: 14)
+        gauntletButton.fillColor = SKColor(red: 0.02, green: 0.03, blue: 0.09, alpha: 0.72)
+        gauntletButton.strokeColor = Palette.unstableRed.withAlphaComponent(0.55)
+        gauntletButton.lineWidth = 1.5
+        menuLayer.addChild(gauntletButton)
+
+        let gauntletTitle = SKLabelNode(fontNamed: "HelveticaNeue-Medium")
+        gauntletTitle.text = "⚔️ WEEKLY GAUNTLET"
+        gauntletTitle.fontSize = 13
+        gauntletTitle.fontColor = Palette.unstableRed
+        gauntletTitle.verticalAlignmentMode = .center
+        gauntletTitle.position = CGPoint(x: 0, y: 8)
+        gauntletButton.addChild(gauntletTitle)
+
+        let gauntletSub = SKLabelNode(fontNamed: "HelveticaNeue-Medium")
+        gauntletSub.text = "BRUTAL FROM SECTOR 1 · ITS OWN LEADERBOARD"
+        gauntletSub.fontSize = 9
+        gauntletSub.fontColor = Palette.textDim
+        gauntletSub.verticalAlignmentMode = .center
+        gauntletSub.position = CGPoint(x: 0, y: -11)
+        gauntletButton.addChild(gauntletSub)
+
+        zenButton = smallMenuButton(title: Premium.isActiveNow ? "ZEN DRIFT" : "ZEN DRIFT ⭐",
+                                    color: Palette.cyan)
+        menuLayer.addChild(zenButton)
+        runLabButton = smallMenuButton(title: "RUN LAB", color: Palette.magnetViolet)
+        menuLayer.addChild(runLabButton)
+
+        zenExitButton = SKShapeNode(circleOfRadius: 18)
+        zenExitButton.fillColor = SKColor(white: 1, alpha: 0.08)
+        zenExitButton.strokeColor = SKColor(white: 1, alpha: 0.25)
+        zenExitButton.lineWidth = 1
+        zenExitButton.isHidden = true
+        zenExitButton.zPosition = 95
+        let zenX = SKLabelNode(fontNamed: "HelveticaNeue-Medium")
+        zenX.text = "✕"
+        zenX.fontSize = 15
+        zenX.fontColor = Palette.textPrimary
+        zenX.verticalAlignmentMode = .center
+        zenExitButton.addChild(zenX)
+        cam.addChild(zenExitButton)
+
         gameOverLayer.zPosition = 100
         gameOverLayer.isHidden = true
         cam.addChild(gameOverLayer)
@@ -671,6 +736,21 @@ final class GameScene: SKScene {
             missionDoneLabels.append(label)
         }
 
+        // Premium: one revive per classic run. Free pilots see it as an upsell.
+        reviveButton = SKShapeNode(rectOf: CGSize(width: 170, height: 36), cornerRadius: 18)
+        reviveButton.fillColor = Palette.gold.withAlphaComponent(0.12)
+        reviveButton.strokeColor = Palette.gold.withAlphaComponent(0.8)
+        reviveButton.lineWidth = 1.2
+        reviveButton.position = CGPoint(x: 0, y: -143)
+        reviveButton.isHidden = true
+        let reviveLabel = SKLabelNode(fontNamed: "HelveticaNeue-Medium")
+        reviveLabel.text = "⭐ REVIVE"
+        reviveLabel.fontSize = 14
+        reviveLabel.fontColor = Palette.gold
+        reviveLabel.verticalAlignmentMode = .center
+        reviveButton.addChild(reviveLabel)
+        overPanel.addChild(reviveButton)
+
         // Kept for the pre-panel layout path; the panel's bar replaced it visually.
         finalBestLabel.fontSize = 17
         finalBestLabel.fontColor = Palette.textDim
@@ -700,6 +780,20 @@ final class GameScene: SKScene {
         layoutHUD()
     }
 
+    private func smallMenuButton(title: String, color: SKColor) -> SKShapeNode {
+        let button = SKShapeNode(rectOf: CGSize(width: 145, height: 40), cornerRadius: 20)
+        button.fillColor = SKColor(red: 0.02, green: 0.03, blue: 0.09, alpha: 0.72)
+        button.strokeColor = color.withAlphaComponent(0.45)
+        button.lineWidth = 1
+        let label = SKLabelNode(fontNamed: "HelveticaNeue-Medium")
+        label.text = title
+        label.fontSize = 12
+        label.fontColor = color
+        label.verticalAlignmentMode = .center
+        button.addChild(label)
+        return button
+    }
+
     private func pulseForever() -> SKAction {
         .repeatForever(.sequence([.fadeAlpha(to: 0.25, duration: 0.9),
                                   .fadeAlpha(to: 1.0, duration: 0.9)]))
@@ -718,7 +812,11 @@ final class GameScene: SKScene {
         pilotCard.position = CGPoint(x: 0, y: h * 0.30 - 100)
         missionsCard.position = CGPoint(x: 0, y: h * 0.30 - 212)
         menuTapLabel.position = CGPoint(x: 0, y: -h * 0.17)
-        dailyButton.position = CGPoint(x: 0, y: -h * 0.17 - 88)
+        dailyButton.position = CGPoint(x: 0, y: -h * 0.17 - 78)
+        gauntletButton.position = CGPoint(x: 0, y: -h * 0.17 - 141)
+        zenButton.position = CGPoint(x: -77.5, y: -h * 0.17 - 190)
+        runLabButton.position = CGPoint(x: 77.5, y: -h * 0.17 - 190)
+        zenExitButton.position = CGPoint(x: -size.width / 2 + 42, y: h / 2 - 54)
 
         dimNode.size = CGSize(width: size.width, height: h)
         overPanel.position = CGPoint(x: 0, y: h * 0.06)
@@ -736,7 +834,14 @@ final class GameScene: SKScene {
 
     private func startRun(showMenu: Bool) {
         if showMenu { mode = .classic }
-        rng = SeededRandom(seed: mode == .daily ? Daily.seed : UInt64.random(in: .min ... .max))
+        let seed: UInt64
+        switch mode {
+        case .daily: seed = Daily.seed
+        case .gauntlet: seed = Self.gauntletSeed
+        case .custom: seed = customSeed
+        case .classic, .zen: seed = UInt64.random(in: .min ... .max)
+        }
+        rng = SeededRandom(seed: seed)
 
         for planet in planets { planet.removeFromParent() }
         planets.removeAll()
@@ -762,6 +867,37 @@ final class GameScene: SKScene {
         lastBounce = nil
         stats = Missions.RunStats()
         completedMissions = []
+        lastGuardianSector = 0
+        revivedThisRun = false
+        xpAwardedThisRun = 0
+        reportedBounces = 0
+        reportedCloseCalls = 0
+        pendingDeathCause = "drift"
+        zenExitButton.isHidden = showMenu || mode != .zen
+
+        // Ghost racing: reset the recorder and spawn today's opponents (daily only).
+        runToken += 1
+        runClock = 0
+        ghostSampleAccumulator = 0
+        ghostSamples = []
+        for ghost in activeGhosts { ghost.removeFromParent() }
+        activeGhosts.removeAll()
+        if mode == .daily && !showMenu {
+            if let mine = Ghosts.loadLocal() {
+                addGhost(GhostRun(name: "YOU", samples: mine, isMine: true), color: Palette.cyan)
+            }
+            let token = runToken
+            let limit = Premium.isActiveNow ? 3 : 1
+            Task { [weak self] in
+                let runs = await Ghosts.fetchTopGhosts(limit: limit)
+                await MainActor.run {
+                    guard let self, self.runToken == token else { return }
+                    for (i, run) in runs.enumerated() {
+                        self.addGhost(run, color: i == 0 ? Palette.gold : Palette.magnetViolet)
+                    }
+                }
+            }
+        }
 
         let first = makePlanet(ringRadius: 105, at: .zero)
         addChild(first)
@@ -779,7 +915,7 @@ final class GameScene: SKScene {
         player.position = first.position + .polar(angle: orbitAngle, radius: first.ringRadius)
         player.alpha = 1
         trail.particleBirthRate = 45
-        trail.particleColor = Progress.trailColor
+        applyTrailStyle()
         aim.isHidden = false
 
         cam.position = camTarget()
@@ -789,9 +925,16 @@ final class GameScene: SKScene {
         gameOverLayer.isHidden = true
         scoreLabel.isHidden = showMenu
 
-        if mode == .daily {
+        switch mode {
+        case .daily:
             let streak = Daily.registerPlay()
-            dailyTag.text = "DAILY · 🔥 \(streak)"
+            var tag = "DAILY · 🔥 \(streak)"
+            if let mutator = Daily.mutator { tag += " · \(mutator.rawValue)" }
+            dailyTag.text = tag
+        case .gauntlet: dailyTag.text = "⚔️ WEEKLY GAUNTLET"
+        case .zen: dailyTag.text = "ZEN DRIFT"
+        case .custom: dailyTag.text = "CUSTOM RUN"
+        case .classic: break
         }
         dailyTag.isHidden = showMenu || mode == .classic
 
@@ -800,6 +943,58 @@ final class GameScene: SKScene {
         } else {
             removeAction(forKey: "menuTick")
         }
+    }
+
+    // Deterministic per ISO week — everyone fights the same gauntlet.
+    private static var gauntletSeed: UInt64 {
+        var hash: UInt64 = 0xcbf29ce484222325
+        for byte in LeaderboardPeriod.gauntlet.key.utf8 {
+            hash ^= UInt64(byte)
+            hash = hash &* 0x100000001b3
+        }
+        return hash
+    }
+
+    private func addGhost(_ run: GhostRun, color: SKColor) {
+        guard activeGhosts.count < 4 else { return }
+        let node = GhostNode(run: run, color: color)
+        addChild(node)
+        activeGhosts.append(node)
+    }
+
+    // Premium trails are color SEQUENCES (each particle cycles as it ages);
+    // everything else is the picked tier color.
+    private func applyTrailStyle() {
+        if let special = Progress.premiumTrail {
+            switch special {
+            case .prism:
+                trail.particleColorSequence = SKKeyframeSequence(
+                    keyframeValues: [SKColor(red: 1, green: 0.4, blue: 0.4, alpha: 1),
+                                     SKColor(red: 1, green: 0.85, blue: 0.35, alpha: 1),
+                                     SKColor(red: 0.4, green: 1, blue: 0.55, alpha: 1),
+                                     Palette.cyan,
+                                     Palette.magnetViolet],
+                    times: [0, 0.25, 0.5, 0.75, 1])
+            case .embers:
+                trail.particleColorSequence = SKKeyframeSequence(
+                    keyframeValues: [SKColor(red: 1, green: 0.95, blue: 0.75, alpha: 1),
+                                     SKColor(red: 1, green: 0.6, blue: 0.2, alpha: 1),
+                                     SKColor(red: 0.9, green: 0.25, blue: 0.1, alpha: 1),
+                                     SKColor(red: 0.35, green: 0.08, blue: 0.05, alpha: 1)],
+                    times: [0, 0.35, 0.7, 1])
+            }
+            trail.particleColor = .white
+        } else {
+            trail.particleColorSequence = nil
+            trail.particleColor = Progress.trailColor
+        }
+    }
+
+    /// Run Lab entry point (RootView): play a shared seed code.
+    func startCustomRun(seed: UInt64) {
+        customSeed = seed
+        mode = .custom
+        startRun(showMenu: false)
     }
 
     // MARK: - Menu hub
@@ -865,8 +1060,16 @@ final class GameScene: SKScene {
     }
 
     private func makePlanet(ringRadius: CGFloat, at position: CGPoint,
-                            kind: PlanetKind = .normal) -> Planet {
-        let speed = min(baseOrbitSpeed + CGFloat(planetCount) * 0.045, maxOrbitSpeed)
+                            kind: PlanetKind = .normal, guardian: Bool = false) -> Planet {
+        var ringRadius = ringRadius
+        var speed = min(baseOrbitSpeed + CGFloat(planetCount) * 0.045, maxOrbitSpeed)
+        // Daily mutators twist the whole world the same way for everyone.
+        if mode == .daily, let mutator = Daily.mutator {
+            switch mutator {
+            case .tinyRings: ringRadius = max(ringRadius * 0.82, 48)
+            case .hyper: speed *= 1.25
+            }
+        }
         let sector = Sectors.sector(for: level)
         let color: SKColor
         switch kind {
@@ -877,10 +1080,11 @@ final class GameScene: SKScene {
         case .unstable: color = Palette.unstableRed
         }
         let planet = Planet(ringRadius: ringRadius,
-                            coreRadius: rng.cgFloat(in: 10...16),
+                            coreRadius: guardian ? 20 : rng.cgFloat(in: 10...16),
                             orbitSpeed: speed,
                             color: color,
-                            kind: kind)
+                            kind: kind,
+                            isGuardian: guardian)
         planet.position = position
         planet.sprinkleStars(nebulaHue: sector.hue)
         planetCount += 1
@@ -914,8 +1118,28 @@ final class GameScene: SKScene {
         let distance = rng.cgFloat(in: 270...420)
         let spread: CGFloat = .pi * 0.36
         let angle = CGFloat.pi / 2 + rng.cgFloat(in: -spread...spread)
+        let position = last.position + .polar(angle: angle, radius: distance)
+
+        // Every 10th sector spawns a GUARDIAN: a huge planet behind two
+        // counter-rotating gate arcs. Beating it pays a heavy bonus.
+        if mode != .zen && level >= 10 && level % 10 == 0 && lastGuardianSector != level {
+            lastGuardianSector = level
+            let guardian = makePlanet(ringRadius: 150, at: position, guardian: true)
+            addChild(guardian)
+            planets.append(guardian)
+            for (i, spin) in [CGFloat(1), CGFloat(-1)].enumerated() {
+                let gate = RotatingGate(orbitRadius: 150 + 34 + CGFloat(i) * 24,
+                                        halfArc: 0.6,
+                                        angularSpeed: spin * (0.9 + CGFloat(i) * 0.25),
+                                        color: Palette.unstableRed)
+                guardian.addChild(gate)
+                gates.append((guardian, gate))
+            }
+            return
+        }
+
         let planet = makePlanet(ringRadius: rng.cgFloat(in: ringRadiusRange(for: level)),
-                                at: last.position + .polar(angle: angle, radius: distance),
+                                at: position,
                                 kind: rollKind())
         addChild(planet)
         planets.append(planet)
@@ -927,15 +1151,17 @@ final class GameScene: SKScene {
     // Seeded like everything else, so daily layouts match for everyone. Nodes are
     // children of the guarded (target) planet and get culled with it.
     private func spawnObstacles(from last: Planet, to planet: Planet) {
+        if mode == .zen { return }   // zen is a hazard-free drift
         let forceShots = ProcessInfo.processInfo.arguments.contains("-screenshots")
+        let gauntlet = mode == .gauntlet
         let sector = Sectors.sector(for: level)
         let toNew = planet.position - last.position
         let dir = toNew.normalized
         let perp = CGPoint(x: -dir.y, y: dir.x)
 
-        // Asteroid wall from sector 3: rocks jut in from one side of the corridor,
-        // always leaving the center line clear so a well-timed shot exists.
-        let wallChance: CGFloat = level >= 3 ? min(0.22 + CGFloat(level) * 0.03, 0.5) : 0
+        // Asteroid wall from sector 3 (gauntlet: from the first corridor).
+        let wallChance: CGFloat = gauntlet ? 0.5
+            : level >= 3 ? min(0.22 + CGFloat(level) * 0.03, 0.5) : 0
         let wantWall = forceShots ? planetCount == 2 : rng.cgFloat(in: 0...1) < wallChance
         if wantWall {
             let t = rng.cgFloat(in: 0.42...0.6)
@@ -954,8 +1180,8 @@ final class GameScene: SKScene {
             walls.append(wall)
         }
 
-        // Bouncer from sector 5: a springy orb beside the corridor.
-        let bouncerChance: CGFloat = level >= 5 ? 0.28 : 0
+        // Bouncer from sector 5 (gauntlet: everywhere).
+        let bouncerChance: CGFloat = gauntlet ? 0.4 : level >= 5 ? 0.28 : 0
         let wantBouncer = forceShots ? planetCount == 3 : rng.cgFloat(in: 0...1) < bouncerChance
         if wantBouncer {
             let t = rng.cgFloat(in: 0.35...0.65)
@@ -967,8 +1193,8 @@ final class GameScene: SKScene {
             bouncers.append(bouncer)
         }
 
-        // Rotating gate from sector 8: an orbiting shield arc around the new planet.
-        let gateChance: CGFloat = level >= 8 ? 0.3 : 0
+        // Rotating gate from sector 8 (gauntlet: from the start).
+        let gateChance: CGFloat = gauntlet ? 0.35 : level >= 8 ? 0.3 : 0
         let wantGate = forceShots ? planetCount == 4 : rng.cgFloat(in: 0...1) < gateChance
         if wantGate {
             let spin: CGFloat = rng.cgFloat(in: 0...1) < 0.5 ? 1 : -1
@@ -1008,6 +1234,19 @@ final class GameScene: SKScene {
             updateFlight(dt: dt, currentTime: currentTime)
         case .dead:
             break
+        }
+
+        // Run clock drives ghost recording and playback (daily only records).
+        if state == .orbiting || state == .flying {
+            runClock += Double(dt)
+            if mode == .daily && ghostSamples.count < Ghosts.maxSamples * 3 {
+                ghostSampleAccumulator += Double(dt)
+                if ghostSampleAccumulator >= Ghosts.sampleInterval {
+                    ghostSampleAccumulator = 0
+                    ghostSamples += [runClock, Double(player.position.x), Double(player.position.y)]
+                }
+            }
+            for ghost in activeGhosts { ghost.advance(to: runClock) }
         }
 
         let goal = camTarget()
@@ -1058,6 +1297,7 @@ final class GameScene: SKScene {
                 if d <= rock.radius + 6 {
                     crumble(at: player.position, hue: Sectors.sector(for: level).hue)
                     shakeAmp = max(shakeAmp, 8)
+                    pendingDeathCause = "wall"
                     if shieldHeld { shieldRescue() } else { die() }
                     return
                 } else if d <= rock.radius + 30 {
@@ -1066,18 +1306,21 @@ final class GameScene: SKScene {
             }
         }
 
-        // Rotating gates on the planet being left AND the one being approached.
+        // Rotating gates on the planet being left AND the one being approached
+        // (guardian planets carry two counter-rotating arcs).
         for planet in [current, target] {
-            guard let gate = gates.first(where: { $0.planet === planet })?.gate,
-                  gate.scene != nil else { continue }
-            let d = player.position.distance(to: planet.position)
-            guard abs(d - gate.orbitRadius) <= RotatingGate.bandHalfWidth else { continue }
-            let v = player.position - planet.position
-            if gate.isBlocking(angle: atan2(v.y, v.x)) {
-                gateSpark(at: player.position)
-                shakeAmp = max(shakeAmp, 8)
-                if shieldHeld { shieldRescue() } else { die() }
-                return
+            for entry in gates where entry.planet === planet && entry.gate.scene != nil {
+                let gate = entry.gate
+                let d = player.position.distance(to: planet.position)
+                guard abs(d - gate.orbitRadius) <= RotatingGate.bandHalfWidth else { continue }
+                let v = player.position - planet.position
+                if gate.isBlocking(angle: atan2(v.y, v.x)) {
+                    gateSpark(at: player.position)
+                    shakeAmp = max(shakeAmp, 8)
+                    pendingDeathCause = "gate"
+                    if shieldHeld { shieldRescue() } else { die() }
+                    return
+                }
             }
         }
 
@@ -1087,10 +1330,30 @@ final class GameScene: SKScene {
         if d <= captureRadius && prevTargetDistance > captureRadius {
             capture(target)
         } else if d > prevTargetDistance && d > captureRadius + missMargin {
-            if shieldHeld { shieldRescue() } else { die() }
+            if mode == .zen {
+                zenRescue()
+            } else if shieldHeld {
+                shieldRescue()
+            } else {
+                pendingDeathCause = "drift"
+                die()
+            }
         } else {
             prevTargetDistance = d
         }
+    }
+
+    // Zen never kills: a missed launch drifts you gently back onto your orbit.
+    private func zenRescue() {
+        let planet = planets[currentIndex]
+        let radial = player.position - planet.position
+        orbitAngle = atan2(radial.y, radial.x)
+        orbitSpeed = planet.orbitSpeed
+        player.position = planet.position + .polar(angle: orbitAngle, radius: planet.currentRingRadius)
+        trail.particleBirthRate = 45
+        aim.isHidden = false
+        state = .orbiting
+        popup(text: "DRIFT", color: Palette.cyan, above: planet)
     }
 
     private func camTarget() -> CGPoint {
@@ -1219,8 +1482,15 @@ final class GameScene: SKScene {
             text = "RISKY +\(points)"
             color = Palette.unstableRed
         }
+        if target.isGuardian {
+            points += 25
+            text = "GUARDIAN DOWN +\(points)"
+            color = Palette.unstableRed
+            shakeAmp = max(shakeAmp, 10)
+            Sound.play("levelup")
+        }
         score += points
-        popup(text: text, color: color, above: target, big: perfectStreak >= 3)
+        popup(text: text, color: color, above: target, big: perfectStreak >= 3 || target.isGuardian)
 
         // A survived wall graze pays out on landing.
         if grazedThisFlight {
@@ -1443,21 +1713,47 @@ final class GameScene: SKScene {
         addChild(burst)
         burst.run(.sequence([.wait(forDuration: 1.5), .removeFromParent()]))
 
+        stats.score = score
+        stats.maxLevel = max(stats.maxLevel, level)
+
+        // Revive-safe accounting: XP and cumulative mission progress are only
+        // ever awarded for the delta since the previous death this run.
+        var reportStats = stats
+        reportStats.bounces -= reportedBounces
+        reportStats.closeCalls -= reportedCloseCalls
+        reportedBounces = stats.bounces
+        reportedCloseCalls = stats.closeCalls
+        let xpDelta = max(0, score - xpAwardedThisRun)
+        xpAwardedThisRun = score
+        let scoreLeveledUp = Progress.addXP(xpDelta)
+        let missionResult = Missions.report(reportStats)
+        completedMissions = missionResult.completed
+        pilotLeveledUp = scoreLeveledUp || missionResult.leveledUp
+
         switch mode {
         case .classic:
             if score > best {
                 best = score
                 UserDefaults.standard.set(best, forKey: "bestScore")
             }
+            Backend.submitScore(score)
         case .daily:
             Daily.recordScore(score)
+            Backend.submitScore(score)
+            Ghosts.saveLocalIfBest(samples: ghostSamples, score: score)
+            Ghosts.submitDaily(score: score, ghost: ghostSamples)
+        case .gauntlet:
+            Backend.submitScore(score, periods: [.gauntlet])
+        case .custom, .zen:
+            break
         }
-        Backend.submitScore(score)
-        stats.score = score
-        let scoreLeveledUp = Progress.addXP(score)
-        let missionResult = Missions.report(stats)
-        completedMissions = missionResult.completed
-        pilotLeveledUp = scoreLeveledUp || missionResult.leveledUp
+        if mode != .zen {
+            RunHistory.save(RunRecord(date: Date(), mode: modeName, score: score,
+                                      captures: captured, perfects: stats.perfects,
+                                      longestStreak: stats.longestStreak, maxSector: level,
+                                      deathCause: pendingDeathCause, duration: runClock))
+        }
+        pendingDeathCause = "drift"
 
         gameOverReady = false
         run(.sequence([.wait(forDuration: 0.55),
@@ -1475,7 +1771,18 @@ final class GameScene: SKScene {
             let streak = Daily.currentStreak
             overCaptionLabel.text = streak > 0 ? "DAILY CHALLENGE · 🔥 \(streak)" : "DAILY CHALLENGE"
             reference = Daily.bestToday
+        case .gauntlet:
+            overCaptionLabel.text = "⚔️ WEEKLY GAUNTLET"
+            reference = 0
+        case .custom:
+            overCaptionLabel.text = "CUSTOM RUN"
+            reference = 0
+        case .zen:
+            overCaptionLabel.text = "ZEN DRIFT"
+            reference = 0
         }
+        // One revive per classic/custom run — premium uses it, free sees the upsell.
+        reviveButton.isHidden = revivedThisRun || !(mode == .classic || mode == .custom) || score == 0
 
         // How close this run came to the record — full gold bar on a new best.
         // Hidden entirely on a scoreless first run (no record to measure against).
@@ -1547,6 +1854,39 @@ final class GameScene: SKScene {
         AdsManager.shared.gameEnded(score: score)
     }
 
+    private var modeName: String {
+        switch mode {
+        case .classic: return "classic"
+        case .daily: return "daily"
+        case .gauntlet: return "gauntlet"
+        case .zen: return "zen"
+        case .custom: return "custom"
+        }
+    }
+
+    // Premium: pick the run back up on the current planet. The previous death
+    // already logged/submitted, so accounting works in deltas (see die()).
+    private func revive() {
+        guard state == .dead, !revivedThisRun else { return }
+        revivedThisRun = true
+        RunHistory.dropLast()   // the final death re-logs the whole run
+        let planet = planets[currentIndex]
+        orbitAngle = -.pi / 2
+        orbitSpin = 1
+        orbitSpeed = planet.orbitSpeed
+        player.position = planet.position + .polar(angle: orbitAngle, radius: planet.currentRingRadius)
+        player.alpha = 1
+        trail.particleBirthRate = 45
+        aim.isHidden = false
+        gameOverLayer.isHidden = true
+        scoreLabel.isHidden = false
+        levelLabel.isHidden = false
+        state = .orbiting
+        popup(text: "REVIVED", color: Palette.gold, above: planet)
+        Haptics.capture()
+        Sound.play("shield")
+    }
+
     // MARK: - Input
 
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
@@ -1556,6 +1896,27 @@ final class GameScene: SKScene {
             let location = touch.location(in: menuLayer)
             if pilotCard.calculateAccumulatedFrame().insetBy(dx: -6, dy: -6).contains(location) {
                 bridge?.openHangar = true
+                Haptics.tap()
+                return
+            }
+            if gauntletButton.calculateAccumulatedFrame().insetBy(dx: -10, dy: -8).contains(location) {
+                mode = .gauntlet
+                startRun(showMenu: false)
+                Haptics.tap()
+                return
+            }
+            if zenButton.calculateAccumulatedFrame().insetBy(dx: -8, dy: -8).contains(location) {
+                if Premium.isActiveNow {
+                    mode = .zen
+                    startRun(showMenu: false)
+                } else {
+                    bridge?.openPaywall = true
+                }
+                Haptics.tap()
+                return
+            }
+            if runLabButton.calculateAccumulatedFrame().insetBy(dx: -8, dy: -8).contains(location) {
+                bridge?.openRunLab = true
                 Haptics.tap()
                 return
             }
@@ -1571,11 +1932,30 @@ final class GameScene: SKScene {
             }
             Haptics.tap()
         case .orbiting:
+            if mode == .zen {
+                let camLocation = touch.location(in: cam)
+                if zenExitButton.frame.insetBy(dx: -14, dy: -14).contains(camLocation) {
+                    startRun(showMenu: true)
+                    Haptics.tap()
+                    return
+                }
+            }
             launch()
         case .flying:
             break
         case .dead:
             guard gameOverReady else { return }
+            let panelLocation = touch.location(in: overPanel)
+            if !reviveButton.isHidden,
+               reviveButton.frame.insetBy(dx: -12, dy: -10).contains(panelLocation) {
+                if Premium.isActiveNow {
+                    revive()
+                } else {
+                    bridge?.openPaywall = true
+                }
+                Haptics.tap()
+                return
+            }
             let location = touch.location(in: gameOverLayer)
             if menuButton.frame.insetBy(dx: -16, dy: -14).contains(location) {
                 startRun(showMenu: true)

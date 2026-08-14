@@ -33,6 +33,7 @@ final class AdsManager: NSObject, GADFullScreenContentDelegate {
     }
 
     func gameEnded(score: Int) {
+        guard !Premium.isActiveNow else { return }   // Premium is ad-free
         let defaults = UserDefaults.standard
         let total = defaults.integer(forKey: Self.counterKey) + score
         defaults.set(total, forKey: Self.counterKey)

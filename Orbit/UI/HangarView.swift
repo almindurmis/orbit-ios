@@ -6,13 +6,17 @@ import SpriteKit
 // the scene restyles when the sheet closes.
 struct HangarView: View {
     @Environment(\.dismiss) private var dismiss
+    @ObservedObject private var premium = Premium.shared
     @State private var ship = Progress.selectedShip
     @State private var trailLevel = Progress.selectedTrailLevel
+    @State private var showPaywall = false
 
     private let pilotLevel = Progress.level
     private let shipColumns = Array(repeating: GridItem(.flexible(), spacing: 12), count: 3)
 
     private var trailColor: Color {
+        if trailLevel == Progress.PremiumTrail.prism.rawValue { return Color(uiColor: Palette.cyan) }
+        if trailLevel == Progress.PremiumTrail.embers.rawValue { return .orange }
         let chosen = Progress.trailTiers.first(where: { $0.level == trailLevel })?.color
         let auto = Progress.trailTiers.last(where: { pilotLevel >= $0.level })?.color
         return Color(uiColor: chosen ?? auto ?? .white)
@@ -42,10 +46,12 @@ struct HangarView: View {
                 }
 
                 section("TRAIL") {
-                    HStack(spacing: 14) {
+                    HStack(spacing: 10) {
                         ForEach(Progress.trailTiers, id: \.level) { tier in
                             trailSwatch(tier)
                         }
+                        premiumTrailSwatch(.prism)
+                        premiumTrailSwatch(.embers)
                     }
                 }
 
@@ -65,6 +71,7 @@ struct HangarView: View {
             }
             .padding(.horizontal, 24)
         }
+        .sheet(isPresented: $showPaywall) { PremiumView() }
     }
 
     // A live mock of the orbiter: ring, styled core, and a trail arc behind it.
@@ -148,7 +155,7 @@ struct HangarView: View {
             VStack(spacing: 5) {
                 Circle()
                     .fill(Color(uiColor: tier.color))
-                    .frame(width: 26, height: 26)
+                    .frame(width: 24, height: 24)
                     .overlay(Circle().stroke(selected ? Theme.gold : .white.opacity(0.15),
                                              lineWidth: selected ? 2.5 : 1))
                     .overlay {
@@ -168,6 +175,47 @@ struct HangarView: View {
 
     private var autoTrailLevel: Int {
         Progress.trailTiers.last(where: { pilotLevel >= $0.level })?.level ?? 1
+    }
+
+    // PRISM / EMBERS: animated premium trails — gradients here, particle color
+    // sequences in the scene. Locked taps open the paywall.
+    private func premiumTrailSwatch(_ special: Progress.PremiumTrail) -> some View {
+        let unlocked = premium.isActive
+        let selected = trailLevel == special.rawValue
+        let fill: AnyShapeStyle = special == .prism
+            ? AnyShapeStyle(AngularGradient(colors: [.red, .yellow, .green,
+                                                     Color(uiColor: Palette.cyan),
+                                                     Color(uiColor: Palette.magnetViolet), .red],
+                                            center: .center))
+            : AnyShapeStyle(LinearGradient(colors: [.yellow, .orange, .red],
+                                           startPoint: .top, endPoint: .bottom))
+        return Button {
+            if unlocked {
+                trailLevel = special.rawValue
+                Progress.selectedTrailLevel = special.rawValue
+            } else {
+                showPaywall = true
+            }
+        } label: {
+            VStack(spacing: 5) {
+                Circle()
+                    .fill(fill)
+                    .frame(width: 24, height: 24)
+                    .overlay(Circle().stroke(selected ? Theme.gold : .white.opacity(0.15),
+                                             lineWidth: selected ? 2.5 : 1))
+                    .overlay {
+                        if !unlocked {
+                            Image(systemName: "lock.fill")
+                                .font(.system(size: 9))
+                                .foregroundStyle(.black.opacity(0.65))
+                        }
+                    }
+                    .opacity(unlocked ? 1 : 0.6)
+                Text(unlocked ? " " : "⭐")
+                    .font(.system(size: 8, weight: .semibold))
+                    .foregroundStyle(Theme.gold)
+            }
+        }
     }
 
     @ViewBuilder

@@ -6,6 +6,9 @@ final class GameBridge: ObservableObject {
     @Published var inMenu = true
     // Set by the scene when the pilot card is tapped — opens the Hangar sheet.
     @Published var openHangar = false
+    // Scene-triggered sheets: zen/revive upsell and the Run Lab.
+    @Published var openPaywall = false
+    @Published var openRunLab = false
 }
 
 struct RootView: View {
@@ -19,6 +22,7 @@ struct RootView: View {
     @State private var pendingAvatar = Int.random(in: 0..<Avatars.count)
     @State private var showProfile = false
     @State private var showLeaderboard = false
+    @State private var showStats = false
     @State private var showSplash = true
 
     var body: some View {
@@ -30,7 +34,9 @@ struct RootView: View {
                 VStack {
                     HStack {
                         chromeButton("person.crop.circle", id: "profileButton") { showProfile = true }
+                        chromeButton("chart.bar", id: "statsButton") { showStats = true }
                         Spacer()
+                        chromeButton("star.circle", id: "premiumButton") { bridge.openPaywall = true }
                         chromeButton("trophy", id: "leaderboardButton") { showLeaderboard = true }
                     }
                     .padding(.horizontal, 22)
@@ -60,6 +66,17 @@ struct RootView: View {
         .sheet(isPresented: $bridge.openHangar, onDismiss: { scene.refreshAfterHangar() }) {
             HangarView()
         }
+        .sheet(isPresented: $bridge.openPaywall, onDismiss: { scene.refreshAfterHangar() }) {
+            PremiumView()
+        }
+        .sheet(isPresented: $bridge.openRunLab) {
+            RunLabView { seed in
+                scene.startCustomRun(seed: seed)
+            }
+        }
+        .sheet(isPresented: $showStats) {
+            StatsView()
+        }
         .sheet(isPresented: $showProfile) {
             if let profile {
                 ProfileView(profile: profile) { updated in
@@ -76,6 +93,7 @@ struct RootView: View {
         }
         .onAppear {
             scene.bridge = bridge
+            Premium.shared.start()
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
                 withAnimation(.easeOut(duration: 0.4)) { showSplash = false }
                 // After the splash so the ATT prompt lands on a settled screen.

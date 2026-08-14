@@ -12,6 +12,7 @@ final class Planet: SKNode {
     let orbitSpeed: CGFloat
     let color: SKColor
     let kind: PlanetKind
+    let isGuardian: Bool
 
     // Unstable planets shrink their ring while orbited; everyone else keeps this fixed.
     private(set) var currentRingRadius: CGFloat
@@ -19,12 +20,13 @@ final class Planet: SKNode {
     private let ring: SKShapeNode
 
     init(ringRadius: CGFloat, coreRadius: CGFloat, orbitSpeed: CGFloat, color: SKColor,
-         kind: PlanetKind = .normal) {
+         kind: PlanetKind = .normal, isGuardian: Bool = false) {
         self.ringRadius = ringRadius
         self.coreRadius = coreRadius
         self.orbitSpeed = orbitSpeed
         self.color = color
         self.kind = kind
+        self.isGuardian = isGuardian
         self.currentRingRadius = ringRadius
         self.ring = SKShapeNode(circleOfRadius: ringRadius)
         super.init()
@@ -50,6 +52,34 @@ final class Planet: SKNode {
         addChild(ring)
 
         decorate()
+        if isGuardian { decorateGuardian() }
+    }
+
+    // Guardian planets (every 10th sector): a heavier double ring and a slow
+    // menacing core pulse — the gates are added by the scene.
+    private func decorateGuardian() {
+        let outer = SKShapeNode(circleOfRadius: ringRadius + 14)
+        outer.strokeColor = SKColor(red: 1.0, green: 0.35, blue: 0.3, alpha: 0.5)
+        outer.lineWidth = 1.5
+        outer.glowWidth = 3
+        outer.run(.repeatForever(.sequence([
+            .fadeAlpha(to: 0.3, duration: 0.9),
+            .fadeAlpha(to: 1.0, duration: 0.9),
+        ])))
+        addChild(outer)
+
+        let aura = SKSpriteNode(texture: Textures.softDot)
+        aura.size = CGSize(width: coreRadius * 11, height: coreRadius * 11)
+        aura.color = SKColor(red: 1.0, green: 0.3, blue: 0.25, alpha: 1)
+        aura.colorBlendFactor = 1
+        aura.alpha = 0.22
+        aura.blendMode = .add
+        aura.zPosition = -1
+        aura.run(.repeatForever(.sequence([
+            .scale(to: 1.15, duration: 1.1),
+            .scale(to: 1.0, duration: 1.1),
+        ])))
+        addChild(aura)
     }
 
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }

@@ -113,7 +113,9 @@ enum Missions {
             defaults.set(min(progressed, mission.target), forKey: progressKey(mission.index))
             if progressed >= mission.target {
                 defaults.set(true, forKey: doneKey(mission.index))
-                if Progress.addXP(mission.xp) { leveledUp = true }
+                // Premium pilots earn double mission XP.
+                let award = Premium.isActiveNow ? mission.xp * 2 : mission.xp
+                if Progress.addXP(award) { leveledUp = true }
                 completed.append(mission)
             }
         }

@@ -239,8 +239,13 @@ struct LeaderboardView: View {
             AvatarView(index: entry.avatar, size: 38)
             Text(entry.name)
                 .font(.system(size: 16, weight: isMe ? .bold : .medium))
-                .foregroundStyle(.white)
+                .foregroundStyle(entry.premium ? Theme.gold : .white)
                 .lineLimit(1)
+            if entry.premium {
+                Image(systemName: "star.fill")
+                    .font(.system(size: 10))
+                    .foregroundStyle(Theme.gold)
+            }
             if isMe {
                 Text("YOU")
                     .font(.system(size: 10, weight: .heavy))

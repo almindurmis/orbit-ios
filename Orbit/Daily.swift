@@ -16,6 +16,21 @@ enum Daily {
 
     static var seed: UInt64 { UInt64(todayKey) }
 
+    // Some days the daily gets a twist — deterministic from the date, so the
+    // whole world plays the same mutation.
+    enum Mutator: String {
+        case tinyRings = "TINY RINGS"
+        case hyper = "HYPER ORBITS"
+    }
+
+    static var mutator: Mutator? {
+        switch todayKey % 5 {
+        case 1: return .tinyRings
+        case 3: return .hyper
+        default: return nil
+        }
+    }
+
     private static var yesterdayKey: Int {
         key(for: Calendar.current.date(byAdding: .day, value: -1, to: Date())!)
     }

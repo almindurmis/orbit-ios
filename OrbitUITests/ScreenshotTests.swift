@@ -61,7 +61,7 @@ final class ScreenshotTests: XCTestCase {
 
         // Daily challenge run
         app = launchFresh()
-        app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.85)).tap()
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.76)).tap()
         usleep(1_500_000)
         snap("07-daily")
     }
