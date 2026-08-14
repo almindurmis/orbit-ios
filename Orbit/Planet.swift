@@ -127,7 +127,15 @@ final class Planet: SKNode {
     }
 
     // Backdrop lives as children so it scrolls and gets culled with its planet.
-    func sprinkleStars(count: Int = 34) {
+    // A sector hue biases the nebulae so each level's sky reads distinct.
+    private var nebulaHue: CGFloat?
+
+    func sprinkleStars(count: Int = 34, nebulaHue: CGFloat? = nil) {
+        self.nebulaHue = nebulaHue
+        sprinkle(count: count)
+    }
+
+    private func sprinkle(count: Int) {
         let tints: [SKColor] = [
             .white, .white,
             SKColor(red: 0.72, green: 0.85, blue: 1.0, alpha: 1),
@@ -180,8 +188,11 @@ final class Planet: SKNode {
             let nebula = SKSpriteNode(texture: Textures.softDot)
             let diameter = CGFloat.random(in: 480...850)
             nebula.size = CGSize(width: diameter, height: diameter * CGFloat.random(in: 0.6...1.0))
-            nebula.color = SKColor(hue: CGFloat.random(in: 0...1), saturation: 0.8,
-                                   brightness: 0.7, alpha: 1)
+            var hue = nebulaHue.map { $0 + CGFloat.random(in: -0.08...0.08) }
+                ?? CGFloat.random(in: 0...1)
+            hue = hue.truncatingRemainder(dividingBy: 1)
+            if hue < 0 { hue += 1 }
+            nebula.color = SKColor(hue: hue, saturation: 0.8, brightness: 0.7, alpha: 1)
             nebula.colorBlendFactor = 1
             nebula.blendMode = .add
             nebula.alpha = CGFloat.random(in: 0.05...0.10)
