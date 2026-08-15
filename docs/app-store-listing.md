@@ -73,7 +73,15 @@ Classic mode works fully offline — perfect for the subway. Your best scores
 reach the leaderboard when you're back online.
 
 One more run. You know you want to.
+
+Terms of Use (EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
+Privacy Policy: https://almindurmis.github.io/orbit-ios/privacy.html
 ```
+
+> App Review 3.1.2: because the app sells auto-renewable subscriptions with the
+> standard Apple EULA, the description MUST contain the EULA link above — it was
+> a metadata rejection reason once (Aug 2026). Keep both links at the bottom of
+> the description on every future edit.
 
 ## Keywords (100 max, comma-separated)
 
