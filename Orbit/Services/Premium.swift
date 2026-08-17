@@ -44,6 +44,19 @@ final class Premium: ObservableObject {
         products = loaded.sorted { $0.price < $1.price }
     }
 
+    /// The launch fetch can race a slow network or store propagation and come
+    /// back empty — the paywall calls this on every presentation, retrying a
+    /// few times so products appear without an app relaunch.
+    func ensureProducts() async {
+        for attempt in 0..<3 {
+            if !products.isEmpty { return }
+            if attempt > 0 {
+                try? await Task.sleep(nanoseconds: UInt64(attempt) * 2_000_000_000)
+            }
+            await loadProducts()
+        }
+    }
+
     func refresh() async {
         var active = false
         for await result in Transaction.currentEntitlements {
