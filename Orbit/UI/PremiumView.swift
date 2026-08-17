@@ -79,10 +79,16 @@ struct PremiumView: View {
                         stagedButton("ORBIT PREMIUM MONTHLY", "$4.99/month")
                         stagedButton("ORBIT PREMIUM YEARLY", "$34.99/year")
                     } else if premium.products.isEmpty {
-                        Text("Subscriptions are loading…\nCheck your connection if this persists.")
-                            .font(.system(size: 12))
-                            .foregroundStyle(Theme.textDim)
-                            .multilineTextAlignment(.center)
+                        VStack(spacing: 10) {
+                            Text("Subscriptions are loading…")
+                                .font(.system(size: 12))
+                                .foregroundStyle(Theme.textDim)
+                            Button("Try Again") {
+                                Task { await premium.ensureProducts() }
+                            }
+                            .font(.system(size: 13, weight: .bold))
+                            .foregroundStyle(Theme.gold)
+                        }
                     } else {
                         ForEach(premium.products, id: \.id) { product in
                             Button {
@@ -130,6 +136,10 @@ struct PremiumView: View {
                     .foregroundStyle(.white.opacity(0.85))
                     .padding(.bottom, 26)
             }
+        }
+        .task {
+            await premium.ensureProducts()
+            await premium.refresh()
         }
     }
 }
